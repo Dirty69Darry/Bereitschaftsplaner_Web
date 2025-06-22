@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bereitschaftsplan</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+    <h1>Bereitschaftsplaner <span id="titleTeamName"></span></h1>
+</header>
+
+<nav>
+    <button onclick="newFile()">Neu</button>
+    <button onclick="openFile()">Öffnen</button>
+    <button onclick="openSaveFileModal()">Speichern</button>
+    <button onclick="showEmployees()">Aktualisieren</button>
+</nav>
+
+<div class="action-buttons">
+    <button id="openModal">Neuen Mitarbeiter hinzufügen</button>
+    <button onclick="createShiftPlan()">Bereitschaftsplan erstellen</button>
+    <button onclick="exportPlan()">Bereitschaftsplan exportieren</button>
+</div>
+
+<div class="employee-list">
+    <h3>Mitarbeiterliste</h3>
+    <table id="employeeTable">
+        <thead><tr><th>Vorname</th><th>Nachname</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="plan-viewer">
+    <h3>Bereitschaftsplan</h3>
+    <div id="planContent">Noch kein Plan erstellt</div>
+</div>
+
+<div class="progress-bar">
+    <div id="progressFill" class="progress-bar-fill"></div>
+</div>
+
+<!--Add-Modal -->
+<div id="addOverlay">
+<div id="addWindow">
+    <button id="closeModal">&times;</button>
+    <h2>Mitarbeiter hinzufügen</h2>
+    <form id="employeeForm">
+    <div>
+    <label for="forename">Vorname</label>
+    <input type="text" id="forename" />
+    </div>
+    <div>
+    <label for="surname">Nachname</label>
+    <input type="text" id="surname" />
+    </div>
+
+    <div class="group">
+    <h2>Urlaub bearbeiten</h2>
+    <label for="vacationBegin">Beginn</label>
+    <input type="date" id="vacationBegin" />
+    <br />
+    <label for="vacationEnd">Ende</label>
+    <input type="date" id="vacationEnd" />
+    <br />
+    <button id="addVacationBtn">Urlaub hinzufügen</button>
+
+    <table id="vacationTable">
+        <thead>
+        <tr>
+            <th>Beginn</th>
+            <th>Ende</th>
+            <th>Aktion</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="group">
+    <h2>Bereitschaft an Feiertagen</h2>
+    <table id="holidaysTable">
+        <thead>
+        <tr>
+            <th>Feiertag</th>
+            <th>Jahr</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <small>Zum Bearbeiten Jahr anklicken.</small>
+    </div>
+
+    <button type="submit" id="saveBtn">Speichern</button>
+    </form>
+</div>
+</div>
+
+<!-- Edit-Modal -->
+<div id="editOverlay">
+<div id="editWindow">
+    <button id="closeEditModal">
+    &times;
+    </button>
+    <h2>Mitarbeiter bearbeiten</h2>
+    <form id="editForm">
+    <div>
+    <label for="editForename">Vorname</label>
+    <input type="text" id="editForename" />
+    </div>
+    <div>
+    <label for="editSurname">Nachname</label>
+    <input type="text" id="editSurname" />
+    </div>
+
+    <div class="group">
+    <h2>Urlaub bearbeiten</h2>
+    <label for="vacationBegin">Beginn</label>
+    <input type="date" id="editVacationBegin" />
+    <br />
+    <label for="vacationEnd">Ende</label>
+    <input type="date" id="editVacationEnd" />
+    <br />
+    <button id="editVacationBtn">Urlaub hinzufügen</button>
+
+    <table id="editVacationTable">
+        <thead>
+        <tr>
+            <th>Beginn</th>
+            <th>Ende</th>
+            <th>Aktion</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="group">
+    <h2>Bereitschaft an Feiertagen</h2>
+    <table id="editHolidaysTable">
+        <thead>
+        <tr>
+            <th>Feiertag</th>
+            <th>Jahr</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <small>Zum Bearbeiten Jahr anklicken.</small>
+    </div>
+
+    <button type="submit" id="saveBtn">Speichern</button>
+    <button id="deleteEditBtn">Mitarbeiter Löschen</button>
+    </form>
+</div>
+</div>
+
+<!-- Plan-Modal -->
+<div id="planOverlay" class="modal">
+<div id="modalWindow">
+    <h2>Planung anpassen</h2>
+    <form id="planForm">
+    <div class="form-group">
+    <label>Startdatum:</label>
+    <input type="date" id="startDate" title="Startdatum der ersten Bereitschaft" required>
+    </div>
+    <div class="form-group">
+    <label>Enddatum:</label>
+    <input type="date" id="endDate" title="Enddatum der letzten Bereitschaft" required>
+    </div>
+    <div class="form-group">
+    <label>Periodendauer (in Tagen):</label>
+    <input type="number" id="periodLength" value="7" min="1" title="Periodendauer einer Bereitschaftsschicht (in Tagen)" required>
+    </div>
+    <div class="form-group">
+    <label>Anzahl der Mitarbeiter pro Bereitschaftsschicht:</label>
+    <input type="number" id="employeesPerShift" value="1" min="1" required>
+    </div>
+    <div class="form-group">
+    <button type="submit">Plan generieren</button>
+    <button type="button" id="closePlanModal">Abbrechen</button>
+    </div>
+    </form>
+</div>
+</div>
+
+<!-- OpenFile-Modal -->
+<div id="openOverlay" class="modal">
+    <div id="openWindow">
+        <h2 style="margin-top: auto; margin-bottom: -5px;">Datei öffnen</h2>
+        <p>Wählen Sie eine Datei aus, um die Teamdaten zu laden.</p>
+        <form id="openForm">
+            <div class="file-input">
+                <input type="file" id="fileID" class="file" accept=".team" />
+            </div>
+            <div class="form-group">
+                <button type="button" onclick="loadFile()">Datei laden</button>
+                <button id="closeOpenModal">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Download-Modal -->
+<div id="saveOverlay" class="modal">
+    <div id="saveWindow">
+        <h2 style="margin-top: auto; margin-bottom: -5px;">Team speichern</h2>
+        <p>Geben Sie einen Dateinamen ein, um die Teamdaten zu speichern.</p>
+        <form id="saveForm">
+            <div class="form-group">
+            <label for="saveFilename">Teamnamen eingeben:</label>
+            <input type="text" id="saveFilename" />
+            </div>
+            <div class="form-group">
+            <button type="button" onclick="saveFile()">Download</button>
+            <button id="closeSaveModal">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+</body>
+</html>
