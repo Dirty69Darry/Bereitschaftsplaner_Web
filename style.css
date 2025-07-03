@@ -86,6 +86,12 @@
         margin-top: 20px;
         width: 600px;
     }
+    .optiongroup {
+        border: 1px solid #aaa;
+        padding: 10px;
+        margin-top: 10px;
+        width: 300px;
+    }
     .list {
         border: 1px solid #ccc;
         height: 150px;

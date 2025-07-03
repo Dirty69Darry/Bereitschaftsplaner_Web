@@ -10,7 +10,10 @@
     DONE:
         - Speichern und Öffnen von Dateien
         - Plan-Generator individuell anpassen
+        - Bundestagsabhängige Feiertage
 */
+
+/*-------------------Globale Variable und Konstanten -------------------*/
 // global Variablen
 let globalEmployeesData = "TEAM.team"; // Local Storage Key für Mitarbeiterdaten
 let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarbeiter
@@ -29,21 +32,118 @@ const editOverlay  = document.getElementById('editOverlay');
 const editWindow  = document.getElementById('editWindow');
 const editform     = document.getElementById('EditForm');
 
-// Feiertage (ersetzt dein HolidayType.ts)
+// Feiertage
 const holidays = [
-    "Neujahr",
-    "Karfreitag",
-    "Ostern",
-    "TagDerArbeit",
-    "ChristiHimmelfahrt",
-    "Pfingsten",
-    "TagDerDeutschenEinheit",
-    "Weihnachten",
-    "ZweiterWeihnachtstag",
-    "Silvester"
+    "Neujahr", //0
+    "HeiligeDreiKönige", //1
+    "InternationalerFrauentag", //2
+    "Karfreitag", //3
+    "Ostersonntag", //4
+    "Ostermontag",  //5
+    "TagDerArbeit", //6
+    "ChristiHimmelfahrt", //7
+    "Pfingstensonntag", //8
+    "Pfingstmontag",    //9
+    "Fronleichnam", //10
+    "MariäHimmelfahrt", //11
+    "Weltkindertag",    //12
+    "TagDerDeutschenEinheit",   //13
+    "Reformationstag",  //14
+    "Allerheiligen",    //15
+    "BußUndBetttag",    //16
+    "Weihnachten",      //17
+    "1. Weihnachtstag", //18
+    "2. Weihnachtstag", //19
+    "Silvester"        //20
 ];
 
-// Berechnet das Datum von Ostersonntag nach dem Gregorianischen Kalender
+// Feiertage in Bundesländern
+const Bundeslaender = {
+    BW: {
+        name: "Baden-Württemberg",
+        holidays: [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 17, 18, 19, 20]
+    },
+    BY: {
+        name: "Bayern",
+        holidays: [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 18, 19, 20]
+    },
+    BE: {
+        name: "Berlin",
+        holidays: [0, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
+    },
+    BB: {
+        name: "Brandenburg",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
+    },
+    HB: {
+        name: "Bremen",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
+    },
+    HH: {
+        name: "Hamburg",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 18, 17, 19, 20]
+    },
+    HE: {
+        name: "Hessen",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 17, 18, 19, 20]
+    },
+    MV: {
+        name: "Mecklenburg-Vorpommern",
+        holidays: [0, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
+    },
+    NI: {
+        name: "Niedersachsen",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 17, 18, 19, 20]
+    },
+    NW: {
+        name: "Nordrhein-Westfalen",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 17, 18, 19, 20]
+    },
+    RP: {
+        name: "Rheinland-Pfalz",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 17, 18, 19, 20]
+    },
+    SL: {
+        name: "Saarland",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 18, 19, 20]
+    },
+    SN: {
+        name: "Sachsen",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 16, 17, 18, 19, 20]
+    },
+    ST: {
+        name: "Sachsen-Anhalt",
+        holidays: [0, 1, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
+    },
+    SH: {
+        name: "Schleswig-Holstein",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 17, 18, 19, 20]
+    },
+    TH: {
+        name: "Thüringen",
+        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
+    }
+};
+
+
+// Event-Listener Main
+window.addEventListener('DOMContentLoaded', () => {
+    if (getTeamFromLocalStorage().teamKey != null) {
+        globalEmployeesData = getTeamFromLocalStorage().teamKey; // Setzt den globalen Schlüssel für Mitarbeiterdaten
+        document.getElementById("titleTeamName").textContent = globalEmployeesData.split('.team')[0]; // Setzt den Titel des Teamnamens
+        console.log("Team aus Local Storage geladen:", globalEmployeesData);
+    }
+    else {
+        console.log("Kein Team in Local Storage gefunden. Erstelle neues Team.");
+        document.getElementById("titleTeamName").textContent = "Neues Team"; // Setzt den Titel des Teamnamens
+    }
+    const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
+    stored.forEach(emp => receiveEmployee(emp));
+    showEmployees(); // Mitarbeiter anzeigen
+});
+
+/*--------------------Feiertage und Urlaub----------------------------- */
+// Berechnet das Datum von Ostersonntag
 function calculateEaster(year) {
     const a = year % 19;
     const b = Math.floor(year / 100);
@@ -62,7 +162,7 @@ function calculateEaster(year) {
     return new Date(year, month - 1, day);
 }
 
-// Gibt eine Liste deutscher Feiertage für ein gegebenes Jahr zurück
+// gibt die Feiertage für ein bestimmtes Jahr zurück
 function getHolidays(year) {
     const easter = calculateEaster(year);
     const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
@@ -81,230 +181,6 @@ function getHolidays(year) {
         { name: holidays[8], date: format(new Date(year, 11, 26)) },
         { name: holidays[8], date: format(new Date(year, 11, 31)) }
     ];
-}
-
-function getEmployees(employeesData) {
-    if (employeesData) {
-        try {
-            return JSON.parse(localStorage.getItem(employeesData)) || [];
-        } catch (error) {
-            console.error('Fehler beim Parsen der Mitarbeiterdaten:', error);
-            return null;
-        }
-    } else {
-        console.log('Keine Mitarbeiterdaten im Local Storage gefunden.');
-        return null;
-    }
-}
-
-function setEmployees(employeesData ,employees) {
-    if (!Array.isArray(employees)) {
-        console.error('setEmployees erwartet ein Array von Mitarbeitern.');
-        return;
-    }
-    localStorage.setItem(employeesData, JSON.stringify(employees));
-    console.log('Mitarbeiter erfolgreich gespeichert:', employees);
-}
-
-
-async function createShiftPlan() {
-    const employees = getEmployees(globalEmployeesData);
-    if (localStorage.getItem('shiftPlan') != null) {
-    localStorage.removeItem('shiftPlan'); // Entferne den alten Plan, wenn vorhanden
-    }
-    await openPlanModal(employees);
-    renderPlan();   
-}
-
-async function exportPlan() {
-    // Prüfen, ob SheetJS geladen ist
-    if (localStorage.getItem("shiftPlan") != null) {
-        // Daten aus dem LocalStorage holen
-        let eintraege = [];
-        const data = localStorage.getItem("shiftPlan");
-        if (data) {
-            try {
-                const parsed = JSON.parse(data);
-                eintraege = parsed; // Annahme: das ist ein Array von Objekten
-            } catch (e) {
-                alert("Fehler beim Lesen der gespeicherten Daten.");
-                return;
-            }
-        } else {
-            alert("Keine gespeicherten Daten gefunden.");
-            return;
-        }
-
-        // Wir bereiten die Daten für den Export vor
-        const exportData = eintraege.map(entry => {
-            return {
-                "Start": formatDateGerman(entry.startShiftDate),
-                "Ende": formatDateGerman(entry.endShiftDate),
-                "Name": entry.firstName + " " + entry.lastName,
-            };
-        });
-
-        // Excel-Export via SheetJS
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Bereitschaftsplan");
-
-        // Trigger Download
-        XLSX.writeFile(wb, 'Bereitschaftsplan.xlsx');
-    } else {
-        alert("Es gibt keinen Schichtplan zum Exportieren. Bitte erstellen Sie zuerst einen Plan.");
-    }
-}
-
-function newFile() {  
-    localStorage.clear(); // Löscht alle Daten im Local Storage
-    window.location.reload(); // Lädt die Seite neu
-    document.getElementById("employeeTable").querySelector("tbody").innerHTML = ""; // Leert die Tabelle
-    }
-
-function openFile() {
-    document.getElementById("openOverlay").style.display = "flex"; // Öffnet das Modal zum Öffnen
-}
-
-function loadFile() {
-    const input = document.getElementById('fileID');
-    if (getTeamFromLocalStorage().teamFound > 0) {
-        localStorage.clear(); // Löscht alle Daten im Local Storage, wenn bereits ein Team gefunden wurde
-        console.log("Alte Team-Daten gelöscht, neues Team wird geladen.");
-    }
-    if (!input.files.length) {
-        alert("Bitte wählen Sie zuerst eine .team-Datei aus.");
-        return;
-    }
-    const file = input.files[0];
-    if (!file.name.endsWith('.team')) {
-        alert("Ungültiger Dateityp. Bitte laden Sie eine .team-Datei hoch.");
-        return;
-    }
-    const key = file.name; // Der Schlüssel, unter dem die Datei gespeichert wird
-    globalEmployeesData = key; // Setzt den globalen Schlüssel für Mitarbeiterdaten
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const content = event.target.result;
-        localStorage.setItem(key, content);
-        document.getElementById("titleTeamName").textContent = key; // Setzt den Titel des Teamnamens
-        console.log("Datei erfolgreich geladen und im LocalStorage unter dem Schlüssel gespeichert: " + key + " " + globalEmployeesData);
-    };
-        reader.onerror = function() {
-        alert("Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.");
-    };
-
-    reader.readAsText(file);
-    closeOpenModal.click(); // Schließt das Modal nach dem Laden der Datei
-}
-
-function saveFile() {
-    const filename = document.getElementById("saveFilename").value.trim();
-    const data = localStorage.getItem(globalEmployeesData);
-    if (!filename) {
-        alert("Bitte geben Sie einen Dateinamen ein.");
-        return;
-    }
-    if (!data) {
-        alert("Keine Mitarbeiterdaten zum Speichern gefunden.");
-        return;
-    }
-    const blob = new Blob([data], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename + '.team'; 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    document.getElementById("saveOverlay").style.display = "none"; // Schließt das Modal
-}
-
-function openSaveFileModal() {
-    if (localStorage.getItem(globalEmployeesData)) {
-        document.getElementById("saveOverlay").style.display = "flex";
-    }
-    else {
-        alert("Sie müssen zuerst ein Team erstellen oder laden, bevor Sie eine Datei speichern können.");
-    }
-}
-
-function initHolidayTable(holTable) {
-    console.log("Initialisiere Feiertagstabelle:", holTable);
-    if (!holTable) {
-        console.error("holTable ist nicht definiert.");
-        return;
-    }
-    // Lese das employees-Array aus dem localStorage
-    const employees = JSON.parse(localStorage.getItem(globalEmployeesData) || "[]");
-    let employee = {};
-    let holValue = null;
-
-    if (currentEditIndex >= 0 && employees.length > 0) {
-        employee = employees[currentEditIndex];
-    }
-
-    const table = document.getElementById(holTable);
-    for (const h of holidays) {
-        const row = table.insertRow();
-        const cell1 = row.insertCell(0);
-        const cell2 = row.insertCell(1);
-        cell1.innerText = h;
-        if (employee != null) {
-            holValue = (employee.lastOnHolidayYear && employee.lastOnHolidayYear[h]) || null; // Fallback auf 0, wenn kein Wert vorhanden ist
-        }
-        cell2.innerHTML = `<input type="number" placeholder="Jahr" value="${holValue}" style="width:80px;" min="1999"  max="2100" step="1" pattern="\\d{4}"  title="Bitte vierstellige Jahreszahl (z. B. 2025) eingeben"">`;
-    }
-}
-
-function loadEmployees() {
-    const employeesData = getEmployees(globalEmployeesData);
-    
-    if (employeesData) {
-        try {
-            console.log('Mitarbeiter gefunden:', employeesData);
-            return employeesData;
-        } catch (error) {
-            console.error('Fehler beim Parsen der Employees-Daten:', error);
-            return null;
-        }
-    } else {
-        console.log('Keine Employees-Daten im Local Storage gefunden.');
-        return null;
-    }
-}
-
-function showEmployees() {
-    const employees = loadEmployees();
-    const table = document.getElementById("employeeTable").querySelector("tbody");
-    if (!employees) {
-        console.error("Keine Mitarbeiterdaten gefunden.");
-        table.innerHTML = ""; // leeren
-        return;
-    }
-
-    table.innerHTML = ""; // leeren
-
-    employees.forEach(employee => {
-        const row = document.createElement("tr");
-        row.classList.add("clickable");
-
-        const nameCell1 = document.createElement("td");
-        nameCell1.textContent = employee.firstName;
-        row.appendChild(nameCell1);
-
-        const nameCell2 = document.createElement("td"); 
-        nameCell2.textContent = employee.lastName;
-        row.appendChild(nameCell2);
-
-        [nameCell1, nameCell2].forEach(cell => {
-            cell.addEventListener("click", () => {
-                console.log(`Mitarbeiter ausgewählt: ${employee.firstName} ${employee.lastName} (ID: ${employee.id})`);
-                openEditModal(row.rowIndex - 1); // rowIndex - 1, da die erste Zeile die Header-Zeile ist
-            });
-        });
-
-        table.appendChild(row);
-    });
 }
 
 function addVacation(ev, startName, endName, vacTableName) {
@@ -380,8 +256,110 @@ function formatDateGerman(date) {
     return realdate.toLocaleDateString('de-DE');
 }
 
-function updateProgress(percent) {
-    document.getElementById("progressFill").style.width = percent + "%";
+function initHolidayTable(holTable) {
+    console.log("Initialisiere Feiertagstabelle:", holTable);
+    if (!holTable) {
+        console.error("holTable ist nicht definiert.");
+        return;
+    }
+    // Lese das employees-Array aus dem localStorage
+    const employees = JSON.parse(localStorage.getItem(globalEmployeesData) || "[]");
+    let employee = {};
+    let holValue = null;
+    const thisholidays = Bundeslaender[document.getElementById("stateSelect").value]; // Aktuell ausgewähltes Bundesland
+
+    if (!thisholidays || !thisholidays.holidays || thisholidays.holidays.length === 0) {return console.error("Keine Feiertage für das ausgewählte Bundesland gefunden.");}
+    if (currentEditIndex >= 0 && employees.length > 0) {
+        employee = employees[currentEditIndex];
+    }
+
+    const table = document.getElementById(holTable);
+    for (const h of thisholidays.holidays) {
+        const row = table.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        cell1.innerText = holidays[h]; // Feiertagsname
+        if (employee != null) {
+            holValue = (employee.lastOnHolidayYear && employee.lastOnHolidayYear[h]) || null; // Fallback auf 0, wenn kein Wert vorhanden ist
+        }
+        cell2.innerHTML = `<input type="number" placeholder="Jahr" value="${holValue}" style="width:80px;" min="1999"  max="2100" step="1" pattern="\\d{4}"  title="Bitte vierstellige Jahreszahl (z. B. 2025) eingeben"">`;
+    }
+}
+
+/* --------------------Mitarbeiterverwaltung----------------------------- */
+
+function getEmployees(employeesData) {
+    if (employeesData) {
+        try {
+            return JSON.parse(localStorage.getItem(employeesData)) || [];
+        } catch (error) {
+            console.error('Fehler beim Parsen der Mitarbeiterdaten:', error);
+            return null;
+        }
+    } else {
+        console.log('Keine Mitarbeiterdaten im Local Storage gefunden.');
+        return null;
+    }
+}
+
+function setEmployees(employeesData ,employees) {
+    if (!Array.isArray(employees)) {
+        console.error('setEmployees erwartet ein Array von Mitarbeitern.');
+        return;
+    }
+    localStorage.setItem(employeesData, JSON.stringify(employees));
+    console.log('Mitarbeiter erfolgreich gespeichert:', employees);
+}
+
+function loadEmployees() {
+    const employeesData = getEmployees(globalEmployeesData);
+    
+    if (employeesData) {
+        try {
+            console.log('Mitarbeiter gefunden:', employeesData);
+            return employeesData;
+        } catch (error) {
+            console.error('Fehler beim Parsen der Employees-Daten:', error);
+            return null;
+        }
+    } else {
+        console.log('Keine Employees-Daten im Local Storage gefunden.');
+        return null;
+    }
+}
+
+function showEmployees() {
+    const employees = loadEmployees();
+    const table = document.getElementById("employeeTable").querySelector("tbody");
+    if (!employees) {
+        console.error("Keine Mitarbeiterdaten gefunden.");
+        table.innerHTML = ""; // leeren
+        return;
+    }
+
+    table.innerHTML = ""; // leeren
+
+    employees.forEach(employee => {
+        const row = document.createElement("tr");
+        row.classList.add("clickable");
+
+        const nameCell1 = document.createElement("td");
+        nameCell1.textContent = employee.firstName;
+        row.appendChild(nameCell1);
+
+        const nameCell2 = document.createElement("td"); 
+        nameCell2.textContent = employee.lastName;
+        row.appendChild(nameCell2);
+
+        [nameCell1, nameCell2].forEach(cell => {
+            cell.addEventListener("click", () => {
+                console.log(`Mitarbeiter ausgewählt: ${employee.firstName} ${employee.lastName} (ID: ${employee.id})`);
+                openEditModal(row.rowIndex - 1); // rowIndex - 1, da die erste Zeile die Header-Zeile ist
+            });
+        });
+
+        table.appendChild(row);
+    });
 }
 
 function checkIfAdded() {
@@ -397,6 +375,57 @@ function receiveEmployee(employee) {
     const row = document.createElement('tr');
     row.innerHTML = `<td>${employee.firstName}</td><td>${employee.lastName}</td>`;
     tbody.appendChild(row);
+}
+
+/*-----------------------Bereitschaftsplangenerator------------------------- */
+
+async function createShiftPlan() {
+    const employees = getEmployees(globalEmployeesData);
+    if (localStorage.getItem('shiftPlan') != null) {
+    localStorage.removeItem('shiftPlan'); // Entferne den alten Plan, wenn vorhanden
+    }
+    await openPlanModal(employees);
+    renderPlan();   
+}
+
+// Öffnet das Plan-Modal und generiert den Schichtplan
+function openPlanModal(employees) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('planOverlay');
+        let plan = []; // Initialisiere den Plan
+        modal.style.display = 'block';
+
+        document.getElementById('planForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            const periodLength = parseInt(document.getElementById('periodLength').value);
+            const employeesPerShift = parseInt(document.getElementById('employeesPerShift').value);
+
+            const startDate = new Date(startDateStr);
+            let endDate = new Date(endDateStr);
+
+            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const fullPeriods = Math.ceil(totalDays / periodLength);
+            const adjustedEndDate = new Date(startDate);
+            adjustedEndDate.setDate(startDate.getDate() + fullPeriods * periodLength - 1);
+
+            if (adjustedEndDate.getTime() !== endDate.getTime()) {
+                alert(`Das Enddatum wurde auf den ${adjustedEndDate.toLocaleDateString()} angepasst, um volle Perioden zu gewährleisten.`);
+                endDate = adjustedEndDate;
+            }
+            // Plan generieren mit den neuen Parametern
+            plan = generatePlan(employees, startDate, endDate, periodLength, employeesPerShift);
+            console.log("Generierter Plan:", plan);
+            modal.style.display = 'none'; // Schließt das Modal
+            resolve(plan); // Gibt den generierten Plan zurück
+
+        });
+        document.getElementById('closePlanModal').addEventListener('click', function() {
+            modal.style.display = 'none';
+            //modal.reset(); // Formular zurücksetzen
+        });
+    });
 }
 
 // Plan-Generator
@@ -440,46 +469,6 @@ function generatePlan(employees, startDate, endDate, periodLength = 7, employees
     }
     localStorage.setItem('shiftPlan', JSON.stringify(assignments));
     return assignments;
-}
-
-// Öffnet das Plan-Modal und generiert den Schichtplan
-function openPlanModal(employees) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('planOverlay');
-        let plan = []; // Initialisiere den Plan
-        modal.style.display = 'block';
-
-        document.getElementById('planForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const startDateStr = document.getElementById('startDate').value;
-            const endDateStr = document.getElementById('endDate').value;
-            const periodLength = parseInt(document.getElementById('periodLength').value);
-            const employeesPerShift = parseInt(document.getElementById('employeesPerShift').value);
-
-            const startDate = new Date(startDateStr);
-            let endDate = new Date(endDateStr);
-
-            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            const fullPeriods = Math.ceil(totalDays / periodLength);
-            const adjustedEndDate = new Date(startDate);
-            adjustedEndDate.setDate(startDate.getDate() + fullPeriods * periodLength - 1);
-
-            if (adjustedEndDate.getTime() !== endDate.getTime()) {
-                alert(`Das Enddatum wurde auf den ${adjustedEndDate.toLocaleDateString()} angepasst, um volle Perioden zu gewährleisten.`);
-                endDate = adjustedEndDate;
-            }
-            // Plan generieren mit den neuen Parametern
-            plan = generatePlan(employees, startDate, endDate, periodLength, employeesPerShift);
-            console.log("Generierter Plan:", plan);
-            modal.style.display = 'none'; // Schließt das Modal
-            resolve(plan); // Gibt den generierten Plan zurück
-
-        });
-        document.getElementById('closePlanModal').addEventListener('click', function() {
-            modal.style.display = 'none';
-            //modal.reset(); // Formular zurücksetzen
-        });
-    });
 }
 
 // Abstand seit letztem Feiertagsdienst in Jahren
@@ -553,21 +542,58 @@ function renderPlan() {
     }
 }
 
-// Event-Listener für DOMContentLoaded
-window.addEventListener('DOMContentLoaded', () => {
-    if (getTeamFromLocalStorage().teamKey != null) {
-        globalEmployeesData = getTeamFromLocalStorage().teamKey; // Setzt den globalen Schlüssel für Mitarbeiterdaten
-        document.getElementById("titleTeamName").textContent = globalEmployeesData.split('.team')[0]; // Setzt den Titel des Teamnamens
-        console.log("Team aus Local Storage geladen:", globalEmployeesData);
+/*--------------------Export-Plan----------------------------------- */
+
+async function exportPlan() {
+    // Prüfen, ob SheetJS geladen ist
+    if (localStorage.getItem("shiftPlan") != null) {
+        // Daten aus dem LocalStorage holen
+        let eintraege = [];
+        const data = localStorage.getItem("shiftPlan");
+        if (data) {
+            try {
+                const parsed = JSON.parse(data);
+                eintraege = parsed; // Annahme: das ist ein Array von Objekten
+            } catch (e) {
+                alert("Fehler beim Lesen der gespeicherten Daten.");
+                return;
+            }
+        } else {
+            alert("Keine gespeicherten Daten gefunden.");
+            return;
+        }
+
+        // Wir bereiten die Daten für den Export vor
+        const exportData = eintraege.map(entry => {
+            return {
+                "Start": formatDateGerman(entry.startShiftDate),
+                "Ende": formatDateGerman(entry.endShiftDate),
+                "Name": entry.firstName + " " + entry.lastName,
+            };
+        });
+
+        // Excel-Export via SheetJS
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Bereitschaftsplan");
+
+        // Trigger Download
+        XLSX.writeFile(wb, 'Bereitschaftsplan.xlsx');
+    } else {
+        alert("Es gibt keinen Schichtplan zum Exportieren. Bitte erstellen Sie zuerst einen Plan.");
+    }
+}
+
+/*--------------------Datei-Management----------------------------- */
+
+function openSaveFileModal() {
+    if (localStorage.getItem(globalEmployeesData)) {
+        document.getElementById("saveOverlay").style.display = "flex";
     }
     else {
-        console.log("Kein Team in Local Storage gefunden. Erstelle neues Team.");
-        document.getElementById("titleTeamName").textContent = "Neues Team"; // Setzt den Titel des Teamnamens
+        alert("Sie müssen zuerst ein Team erstellen oder laden, bevor Sie eine Datei speichern können.");
     }
-    const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
-    stored.forEach(emp => receiveEmployee(emp));
-    showEmployees(); // Mitarbeiter anzeigen
-});
+}
 
 // get team from localStorage
 function getTeamFromLocalStorage() {
@@ -583,8 +609,72 @@ function getTeamFromLocalStorage() {
     return {teamKey , teamFound};
 }
 
+function newFile() {  
+    localStorage.clear(); // Löscht alle Daten im Local Storage
+    window.location.reload(); // Lädt die Seite neu
+    document.getElementById("employeeTable").querySelector("tbody").innerHTML = ""; // Leert die Tabelle
+    }
+
+function openFile() {
+    document.getElementById("openOverlay").style.display = "flex"; // Öffnet das Modal zum Öffnen
+}
+
+function loadFile() {
+    const input = document.getElementById('fileID');
+    if (getTeamFromLocalStorage().teamFound > 0) {
+        localStorage.clear(); // Löscht alle Daten im Local Storage, wenn bereits ein Team gefunden wurde
+        console.log("Alte Team-Daten gelöscht, neues Team wird geladen.");
+    }
+    if (!input.files.length) {
+        alert("Bitte wählen Sie zuerst eine .team-Datei aus.");
+        return;
+    }
+    const file = input.files[0];
+    if (!file.name.endsWith('.team')) {
+        alert("Ungültiger Dateityp. Bitte laden Sie eine .team-Datei hoch.");
+        return;
+    }
+    const key = file.name; // Der Schlüssel, unter dem die Datei gespeichert wird
+    globalEmployeesData = key; // Setzt den globalen Schlüssel für Mitarbeiterdaten
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const content = event.target.result;
+        localStorage.setItem(key, content);
+        document.getElementById("titleTeamName").textContent = key; // Setzt den Titel des Teamnamens
+        console.log("Datei erfolgreich geladen und im LocalStorage unter dem Schlüssel gespeichert: " + key + " " + globalEmployeesData);
+    };
+        reader.onerror = function() {
+        alert("Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.");
+    };
+
+    reader.readAsText(file);
+    closeOpenModal.click(); // Schließt das Modal nach dem Laden der Datei
+}
+
+function saveFile() {
+    const filename = document.getElementById("saveFilename").value.trim();
+    const data = localStorage.getItem(globalEmployeesData);
+    if (!filename) {
+        alert("Bitte geben Sie einen Dateinamen ein.");
+        return;
+    }
+    if (!data) {
+        alert("Keine Mitarbeiterdaten zum Speichern gefunden.");
+        return;
+    }
+    const blob = new Blob([data], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename + '.team'; 
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    document.getElementById("saveOverlay").style.display = "none"; // Schließt das Modal
+}
+
+
+/**--------------------Mitarbeiter hinzufügen----------------------------------------------------*/
 //Modal-Elemente für neuen Mitarbeiter
-// add Modal öffnen
 openBtn.addEventListener('click', () => {
 
     addOverlay.style.display = 'flex';
@@ -602,7 +692,7 @@ openBtn.addEventListener('click', () => {
 
 });
 
-// Modal schließen
+// Modal Neuer Mitarbeiter schließen
 closeBtn.addEventListener('click', () => {
     document.getElementById("vacationTable").querySelector("tbody").innerHTML = ""; // Urlaubstabelle leeren
     document.getElementById("holidaysTable").innerHTML = ""; // Feiertagstabelle leeren
@@ -611,14 +701,14 @@ closeBtn.addEventListener('click', () => {
     form.reset();
 });
 
-// Klick auf Overlay (außerhalb Fenster) schließt Modal
+// Modal Neuer Mitarbeiter schließen bei Klick außerhalb des Fensters
 addOverlay.addEventListener('click', e => {
 if (e.target === addOverlay) {
     closeBtn.click(); // Schließt das Modal
 }
 });
 
-// Formular absenden: speichern + schließen
+// Modal für Mitarbeiter speichern
 form.addEventListener('submit', e => {
     e.preventDefault();
     const firstName = document.getElementById('forename').value.trim();
@@ -668,8 +758,8 @@ form.addEventListener('submit', e => {
     showEmployees(); // Tabelle aktualisieren
 });
 
+/*--------------------Mitarbeiter bearbeiten----------------------------------------------------*/
 //Modal-Elemente für Mitarbeiter bearbeiten
-// Edit Modal öffnen
 function openEditModal(index) {
     const employees = JSON.parse(localStorage.getItem(globalEmployeesData)) || [];
     const emp = employees[index];
@@ -707,13 +797,14 @@ closeEditBtn.addEventListener('click', () => {
     editForm.reset();
 });
 
-// Klick auf Overlay (außerhalb Fenster) schließt Modal
+//Modal Edit Mitarbeiter schließen bei Klick außerhalb des Fensters
 editOverlay.addEventListener('click', e => {
 if (e.target === editOverlay) {
     closeEditBtn.click(); // Schließt das editModal
 }
 });
 
+// Löschen des Mitarbeiters
 deleteEditBtn.addEventListener('click', () => {
     const employees = getEmployees(globalEmployeesData) || [];
     if (currentEditIndex !== null && currentEditIndex >= 0 && currentEditIndex < employees.length) {
@@ -729,7 +820,7 @@ deleteEditBtn.addEventListener('click', () => {
     }
 });
 
-// Formular absenden: speichern + schließen
+// Modal Edit Mitarbeiter speichern
 editForm.addEventListener('submit', e => {
     e.preventDefault();
     const firstName = document.getElementById('editForename').value.trim();
@@ -782,19 +873,21 @@ editForm.addEventListener('submit', e => {
     editForm.reset();
 });
 
-// Schließen der Modals für Speichern
+/*----------------------Team speichern------------------------------------------------------------*/
+// Modal File save schließen
 closeSaveModal.addEventListener('click', () => {
     document.getElementById("saveOverlay").style.display = "none"; // Schließt das Modal
     document.getElementById("saveForm").reset(); // Formular zurücksetzen
 });
 
-// Klick auf Overlay (außerhalb Fenster) schließt Modal
+// Modal File save schließen bei Klick außerhalb des Fensters
 saveOverlay.addEventListener('click', e => {
 if (e.target === saveOverlay) {
     closeSaveModal.click(); // Schließt das Modal
 }
 });
 
+/*----------------------Team öffnen---------------------------------------------------------------*/
 // Schließen des Modals zum Öffnen
 closeOpenModal.addEventListener('click', () => {
     document.getElementById("openOverlay").style.display = "none"; // Schließt das Modal

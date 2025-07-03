@@ -15,6 +15,27 @@
     <button onclick="openFile()">Öffnen</button>
     <button onclick="openSaveFileModal()">Speichern</button>
     <button onclick="showEmployees()">Aktualisieren</button>
+    <div class="optiongroup">
+    <label>Bundesland:</label>
+    <select id="stateSelect" title="Bundesland für Feiertage auswählen">
+        <option value="BW">Baden-Württemberg</option>
+        <option value="BY">Bayern</option>
+        <option value="BE">Berlin</option>
+        <option value="BB" selected>Brandenburg</option>
+        <option value="HB">Bremen</option>
+        <option value="HH">Hamburg</option>
+        <option value="HE">Hessen</option>
+        <option value="MV">Mecklenburg-Vorpommern</option>
+        <option value="NI">Niedersachsen</option>
+        <option value="NW">Nordrhein-Westfalen</option>
+        <option value="RP">Rheinland-Pfalz</option>
+        <option value="SL">Saarland</option>
+        <option value="SN">Sachsen</option>
+        <option value="ST">Sachsen-Anhalt</option>
+        <option value="SH">Schleswig-Holstein</option>
+        <option value="TH">Thüringen</option>
+    </select>
+    </div>
 </nav>
 
 <div class="action-buttons">
@@ -159,7 +180,7 @@
 </div>
 </div>
 
-<!-- Plan-Modal -->
+<!-- Plangenerator-Modal -->
 <div id="planOverlay" class="modal">
 <div id="modalWindow">
     <h2>Planung anpassen</h2>
@@ -225,6 +246,5 @@
 
 <script src="main.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 </body>
 </html>
