@@ -5,13 +5,12 @@
         - Kalendarische übersicht für jeden Mitarbeiter
         - Feiertage in der Tabelle anzeigen
         - Übersicht mit mehr Daten wie z.B. Anzahl der Schichten pro Mitarbeiter
-        - Metadaten wie z.B. Erstellungsdatum, Ersteller, Version
+        - Metadaten wie Erstellungsdatum, Ersteller
     
     DONE:
-        - Speichern und Öffnen von Dateien
-        - Plan-Generator individuell anpassen
-        - Bundestagsabhängige Feiertage
+        - Versionierung hinzugefügt
 */
+
 
 /*-------------------Globale Variable und Konstanten -------------------*/
 // global Variablen
@@ -20,6 +19,7 @@ let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarb
 let vacations = []; // Array für Urlaubsanträge
 
 //global Konstanten
+const dataUrl = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
 const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
 const currentVersion = "0.2.1"; // Aktuelle Version der Anwendung
 const openBtn  = document.getElementById('openModal');
@@ -127,11 +127,7 @@ const Bundeslaender = {
     }
 };
 
-<<<<<<< Updated upstream
-
-=======
 /*--------------------Main-Event und Organisation----------------------------- */
->>>>>>> Stashed changes
 // Event-Listener Main
 window.addEventListener('DOMContentLoaded', () => {
     if (getTeamFromLocalStorage().teamKey != null) {
@@ -146,29 +142,32 @@ window.addEventListener('DOMContentLoaded', () => {
     const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
     stored.forEach(emp => receiveEmployee(emp));
     showEmployees(); // Mitarbeiter anzeigen
-<<<<<<< Updated upstream
-});
-
-=======
     checkVersion(); // Überprüft die Version
 });
 
 // Überprüft die Version
 async function checkVersion() {
-    try {
-        const response = await fetch(versionUrl);
-        if (!response.ok) throw new Error("Fehler beim Abrufen der Version");
-        const text = await response.text();
-        const latestVersion = text.match(/currentVersion\s*=\s*['"]([^'"]+)['"]/)[1];
-        if (latestVersion !== currentVersion) {
-            alert(`Eine neue Version ist verfügbar: ${latestVersion}. Bitte aktualisieren Sie die Seite.`);
-        }
-    } catch (error) {
-        console.error("Fehler beim Überprüfen der Version:", error);
-    }
+        document.getElementById("version-label").innerHTML = `<a href = ${dataUrl} target ="_blank">${currentVersion}</a>`;
+
+        const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(versionUrl)}`;
+        fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) throw new Error("Fehler beim Abrufen der Remote-Version");
+            return response.json();
+        })
+        .then(data => {
+            const remote = JSON.parse(data.contents);
+            const remoteVersion = remote.version;
+
+            if (remoteVersion !== currentVersion) {
+            alert(`Neue Version verfügbar: ${remoteVersion} (aktuell: ${currentVersion})`);
+            }
+        })
+        .catch(error => {
+            console.error("Versionsprüfung fehlgeschlagen:", error);
+        });
 }
 
->>>>>>> Stashed changes
 /*--------------------Feiertage und Urlaub----------------------------- */
 // Berechnet das Datum von Ostersonntag
 function calculateEaster(year) {
