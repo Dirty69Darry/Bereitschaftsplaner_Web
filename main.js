@@ -20,6 +20,8 @@ let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarb
 let vacations = []; // Array für Urlaubsanträge
 
 //global Konstanten
+const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
+const currentVersion = "0.2.1"; // Aktuelle Version der Anwendung
 const openBtn  = document.getElementById('openModal');
 const closeBtn = document.getElementById('closeModal');
 const addOverlay  = document.getElementById('addOverlay');
@@ -125,7 +127,11 @@ const Bundeslaender = {
     }
 };
 
+<<<<<<< Updated upstream
 
+=======
+/*--------------------Main-Event und Organisation----------------------------- */
+>>>>>>> Stashed changes
 // Event-Listener Main
 window.addEventListener('DOMContentLoaded', () => {
     if (getTeamFromLocalStorage().teamKey != null) {
@@ -140,8 +146,29 @@ window.addEventListener('DOMContentLoaded', () => {
     const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
     stored.forEach(emp => receiveEmployee(emp));
     showEmployees(); // Mitarbeiter anzeigen
+<<<<<<< Updated upstream
 });
 
+=======
+    checkVersion(); // Überprüft die Version
+});
+
+// Überprüft die Version
+async function checkVersion() {
+    try {
+        const response = await fetch(versionUrl);
+        if (!response.ok) throw new Error("Fehler beim Abrufen der Version");
+        const text = await response.text();
+        const latestVersion = text.match(/currentVersion\s*=\s*['"]([^'"]+)['"]/)[1];
+        if (latestVersion !== currentVersion) {
+            alert(`Eine neue Version ist verfügbar: ${latestVersion}. Bitte aktualisieren Sie die Seite.`);
+        }
+    } catch (error) {
+        console.error("Fehler beim Überprüfen der Version:", error);
+    }
+}
+
+>>>>>>> Stashed changes
 /*--------------------Feiertage und Urlaub----------------------------- */
 // Berechnet das Datum von Ostersonntag
 function calculateEaster(year) {
@@ -595,7 +622,6 @@ function openSaveFileModal() {
     }
 }
 
-// get team from localStorage
 function getTeamFromLocalStorage() {
     let teamKey = null;
     let teamFound = 0;
