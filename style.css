@@ -1,3 +1,7 @@
+    a {
+        text-decoration: none;
+        color: #4b94f9;
+    }
     header {
         display: flex;
         justify-content: space-between;
@@ -161,8 +165,7 @@
     #version-label {
         position: right;
         font-family: sans-serif;
-        font-size: 10px;
-        color: #040404;
+        font-size: 14px;
     }
     #newEmployeeBtn {
         width: 620px;

@@ -5,10 +5,10 @@
         - Kalendarische übersicht für jeden Mitarbeiter
         - Feiertage in der Tabelle anzeigen
         - Übersicht mit mehr Daten wie z.B. Anzahl der Schichten pro Mitarbeiter
-        - Metadaten wie z.B. Erstellungsdatum, Ersteller, Version
+        - Metadaten wie Erstellungsdatum, Ersteller
     
     DONE:
-        - Versionierung der Anwendung
+        - Versionierung hinzugefügt
 */
 
 
@@ -19,6 +19,7 @@ let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarb
 let vacations = []; // Array für Urlaubsanträge
 
 //global Konstanten
+const dataUrl = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
 const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
 const currentVersion = "0.2.1"; // Aktuelle Version der Anwendung
 const openBtn  = document.getElementById('openModal');
@@ -146,7 +147,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Überprüft die Version
 async function checkVersion() {
-        document.getElementById("version-label").textContent = `Version: ${currentVersion}`;
+        document.getElementById("version-label").innerHTML = `<a href = ${dataUrl} target ="_blank">${currentVersion}</a>`;
 
         const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(versionUrl)}`;
         fetch(apiUrl)
