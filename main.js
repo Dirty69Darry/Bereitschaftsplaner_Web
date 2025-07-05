@@ -8,10 +8,9 @@
         - Metadaten wie z.B. Erstellungsdatum, Ersteller, Version
     
     DONE:
-        - Speichern und Öffnen von Dateien
-        - Plan-Generator individuell anpassen
-        - Bundestagsabhängige Feiertage
+        - Versionierung der Anwendung
 */
+
 
 /*-------------------Globale Variable und Konstanten -------------------*/
 // global Variablen
@@ -20,6 +19,8 @@ let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarb
 let vacations = []; // Array für Urlaubsanträge
 
 //global Konstanten
+const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
+const currentVersion = "0.2.1"; // Aktuelle Version der Anwendung
 const openBtn  = document.getElementById('openModal');
 const closeBtn = document.getElementById('closeModal');
 const addOverlay  = document.getElementById('addOverlay');
@@ -125,7 +126,7 @@ const Bundeslaender = {
     }
 };
 
-
+/*--------------------Main-Event und Organisation----------------------------- */
 // Event-Listener Main
 window.addEventListener('DOMContentLoaded', () => {
     if (getTeamFromLocalStorage().teamKey != null) {
@@ -140,7 +141,31 @@ window.addEventListener('DOMContentLoaded', () => {
     const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
     stored.forEach(emp => receiveEmployee(emp));
     showEmployees(); // Mitarbeiter anzeigen
+    checkVersion(); // Überprüft die Version
 });
+
+// Überprüft die Version
+async function checkVersion() {
+        document.getElementById("version-label").textContent = `Version: ${currentVersion}`;
+
+        const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(versionUrl)}`;
+        fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) throw new Error("Fehler beim Abrufen der Remote-Version");
+            return response.json();
+        })
+        .then(data => {
+            const remote = JSON.parse(data.contents);
+            const remoteVersion = remote.version;
+
+            if (remoteVersion !== currentVersion) {
+            alert(`Neue Version verfügbar: ${remoteVersion} (aktuell: ${currentVersion})`);
+            }
+        })
+        .catch(error => {
+            console.error("Versionsprüfung fehlgeschlagen:", error);
+        });
+}
 
 /*--------------------Feiertage und Urlaub----------------------------- */
 // Berechnet das Datum von Ostersonntag
@@ -595,7 +620,6 @@ function openSaveFileModal() {
     }
 }
 
-// get team from localStorage
 function getTeamFromLocalStorage() {
     let teamKey = null;
     let teamFound = 0;

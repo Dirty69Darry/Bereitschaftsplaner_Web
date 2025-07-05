@@ -1,3 +1,10 @@
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        font-family: sans-serif;
+    }
     body {
         font-family: Arial, sans-serif;
         margin: 20px;
@@ -55,6 +62,20 @@
     nav button:active {
         transform: scale(0.98);
     }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 5px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+/*--------Class-Styles-----------------------------*/
     .action-buttons {
         display: flex;
         flex-wrap: wrap;
@@ -99,19 +120,6 @@
         margin-top: 10px;
         padding: 5px;
     }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
-    th, td {
-        border: 1px solid #ccc;
-        padding: 5px;
-        text-align: left;
-    }
-    th {
-        background-color: #f2f2f2;
-    }
     .btn-delete {
         color: white;
         background-color: #d9534f;
@@ -134,8 +142,27 @@
         background-color: limegreen; 
         width: 0%; 
     }
+    .form-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .form-group label {
+        width: 50%;
+    }
+    .form-group input {
+        width: 45%;
+    }
     .clickable {
         cursor: pointer;
+    }
+/*--------ID-styles-----------------*/
+    #version-label {
+        position: right;
+        font-family: sans-serif;
+        font-size: 10px;
+        color: #040404;
     }
     #newEmployeeBtn {
         width: 620px;
@@ -146,54 +173,53 @@
         margin-top: 20px;
     }
     #addOverlay, #editOverlay, #saveOverlay, #openOverlay {
-    position: fixed;
-    top: 0; 
-    left: 50vw; 
-    transform: translateX(-50%);
-    width: 100vw; 
-    height: 100vh;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+        position: fixed;
+        top: 0; 
+        left: 50vw; 
+        transform: translateX(-50%);
+        width: 100vw; 
+        height: 100vh;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
     }
     #addWindow, #editWindow, #saveWindow, #openWindow {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    position: relative;
-    max-height: 67vh;
-    overflow-y: auto;
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        position: relative;
+        max-height: 67vh;
+        overflow-y: auto;
     }
     #addWindow, #editWindow {
-    margin-top: 0;
+        margin-top: 0;
     }
     #closeModal, #closeEditModal {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
     }
-    /* Formularfelder */
     #addWindow, #editWindow label {
-    display: block;
-    margin: 0.5rem 0;
+        display: block;
+        margin: 0.5rem 0;
     }
     #addWindow, #editWindow input {
-    width: 50%;
-    padding: 0.4rem;
-    margin-top: 0.2rem;
-    box-sizing: border-box;
+        width: 50%;
+        padding: 0.4rem;
+        margin-top: 0.2rem;
+        box-sizing: border-box;
     }
     #saveBtn {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
     }
     #planOverlay{ 
         display: none; 
@@ -211,16 +237,5 @@
         width: 35vw; 
         border-radius: 10px; 
     }
-    .form-group {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    .form-group label {
-        width: 50%;
-    }
-    .form-group input {
-        width: 45%;
-    }
+
 
