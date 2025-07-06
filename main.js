@@ -1,27 +1,30 @@
 //main.js
 /*
     TODO:
+    - die großen .addEventListener in function umwandeln
     - Excel Tabelle erweitern 
         - Kalendarische übersicht für jeden Mitarbeiter
         - Feiertage in der Tabelle anzeigen
         - Übersicht mit mehr Daten wie z.B. Anzahl der Schichten pro Mitarbeiter
-        - Metadaten wie Erstellungsdatum, Ersteller
+        - Metadaten wie Erstellungsdatum, Ersteller, Version
     
     DONE:
-        - Versionierung hinzugefügt
+        - Bundesland disable if team in local storage is not empty und save Bundesland in .team 
+        - Feiertage überprüfen
+        - Bugfix: Versionskontrolle nur alert wenn online Version größer ist als aktuelle
 */
 
 
 /*-------------------Globale Variable und Konstanten -------------------*/
 // global Variablen
-let globalEmployeesData = "TEAM.team"; // Local Storage Key für Mitarbeiterdaten
+let globalEmployeesData = "TEAM.team"; // Local Storage Key für default Mitarbeiterdaten
 let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarbeiter
 let vacations = []; // Array für Urlaubsanträge
 
 //global Konstanten
 const dataUrl = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
 const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
-const currentVersion = "0.2.1"; // Aktuelle Version der Anwendung
+const currentVersion = "0.2.2"; // Aktuelle Version der Anwendung
 const openBtn  = document.getElementById('openModal');
 const closeBtn = document.getElementById('closeModal');
 const addOverlay  = document.getElementById('addOverlay');
@@ -37,22 +40,22 @@ const editform     = document.getElementById('EditForm');
 // Feiertage
 const holidays = [
     "Neujahr", //0
-    "HeiligeDreiKönige", //1
-    "InternationalerFrauentag", //2
+    "Heilige Drei Könige", //1
+    "Internationaler Frauentag", //2
     "Karfreitag", //3
     "Ostersonntag", //4
     "Ostermontag",  //5
-    "TagDerArbeit", //6
-    "ChristiHimmelfahrt", //7
+    "Tag der Arbeit", //6
+    "Christi Himmelfahrt", //7
     "Pfingstensonntag", //8
     "Pfingstmontag",    //9
     "Fronleichnam", //10
-    "MariäHimmelfahrt", //11
+    "Mariä Himmelfahrt", //11
     "Weltkindertag",    //12
-    "TagDerDeutschenEinheit",   //13
+    "Tag der Deutschen Einheit",   //13
     "Reformationstag",  //14
     "Allerheiligen",    //15
-    "BußUndBetttag",    //16
+    "Buß- und Betttag",    //16
     "Weihnachten",      //17
     "1. Weihnachtstag", //18
     "2. Weihnachtstag", //19
@@ -130,19 +133,32 @@ const Bundeslaender = {
 /*--------------------Main-Event und Organisation----------------------------- */
 // Event-Listener Main
 window.addEventListener('DOMContentLoaded', () => {
+    const stateSelect = document.getElementById("stateSelect");
     if (getTeamFromLocalStorage().teamKey != null) {
         globalEmployeesData = getTeamFromLocalStorage().teamKey; // Setzt den globalen Schlüssel für Mitarbeiterdaten
         document.getElementById("titleTeamName").textContent = globalEmployeesData.split('.team')[0]; // Setzt den Titel des Teamnamens
         console.log("Team aus Local Storage geladen:", globalEmployeesData);
+        stateSelect.value = localStorage.getItem("selectedState" || "none");
     }
     else {
         console.log("Kein Team in Local Storage gefunden. Erstelle neues Team.");
         document.getElementById("titleTeamName").textContent = "Neues Team"; // Setzt den Titel des Teamnamens
+        stateSelect.value = "none";
     }
     const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
     stored.forEach(emp => receiveEmployee(emp));
     showEmployees(); // Mitarbeiter anzeigen
     checkVersion(); // Überprüft die Version
+
+    //Bundesland auswählen und nicht nachher änderbar 
+
+    if(stateSelect.disabled == false && stateSelect.value == "none"){
+        toggleActionButtons();
+    }
+    if (localStorage.getItem("selectedState") !== null){
+        stateSelect.value = localStorage.getItem("selectedState");
+        stateSelect.disabled = true;
+    }
 });
 
 // Überprüft die Version
@@ -159,13 +175,31 @@ async function checkVersion() {
             const remote = JSON.parse(data.contents);
             const remoteVersion = remote.version;
 
-            if (remoteVersion !== currentVersion) {
+            if (remoteVersion >= currentVersion) {
             alert(`Neue Version verfügbar: ${remoteVersion} (aktuell: ${currentVersion})`);
             }
         })
         .catch(error => {
             console.error("Versionsprüfung fehlgeschlagen:", error);
         });
+}
+
+//enable/disable Action-Buttons
+function toggleActionButtons(){
+    const stateSelect = document.getElementById("stateSelect");
+    const div = document.getElementById("action-buttonsID");
+    if(stateSelect.value == "none" ){
+        div.classList.add("disabled");
+        div.querySelectorAll("button").forEach(
+            btn => btn.disabled = true
+        );
+    }
+    else{
+        div.classList.remove("disabled");
+        div.querySelectorAll("button").forEach(
+            btn => btn.disabled = false
+        );
+    }
 }
 
 /*--------------------Feiertage und Urlaub----------------------------- */
@@ -188,24 +222,51 @@ function calculateEaster(year) {
     return new Date(year, month - 1, day);
 }
 
+function calculateFirstAdvent(year){
+    const christmas = new Date(year, 11, 25); //4ter Advent und Heiligabend können den selben Tag haben
+    let firstAdvent = new Date(christmas);
+    let sundaysCount = 0;
+
+    while (sundaysCount < 4){
+        firstAdvent.setDate(firstAdvent.getDate() -1);
+        if (firstAdvent.getDay === 0){ // Sunday = 0
+            sundaysCount++;
+        }
+    }
+
+    return firstAdvent;
+}
+
 // gibt die Feiertage für ein bestimmtes Jahr zurück
 function getHolidays(year) {
     const easter = calculateEaster(year);
+    const firstAdvent = calculateFirstAdvent(year);
     const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 
     const format = date => date.toISOString().split('T')[0];
 
     return [
-        { name: holidays[0], date: format(new Date(year, 0, 1)) },
-        { name: holidays[1], date: format(addDays(easter, -2)) },
-        { name: holidays[2], date: format(addDays(easter, 1)) },
-        { name: holidays[3], date: format(new Date(year, 4, 1)) },
-        { name: holidays[4], date: format(addDays(easter, 39)) },
-        { name: holidays[5], date: format(addDays(easter, 50)) },
-        { name: holidays[6], date: format(new Date(year, 9, 3)) },
-        { name: holidays[7], date: format(new Date(year, 11, 25)) },
-        { name: holidays[8], date: format(new Date(year, 11, 26)) },
-        { name: holidays[8], date: format(new Date(year, 11, 31)) }
+        { name: holidays[0], date: format(new Date(year, 0, 1)) }, //Neujahr
+        { name: holidays[1], date: format(new Date(year, 0, 6) ) }, //Heilige drei Könige
+        { name: holidays[2], date: format(new Date(year, 2, 8)) }, // Frauentag
+        { name: holidays[3], date: format(addDays(easter, -2)) }, //Karfreitag
+        { name: holidays[4], date: format(addDays(easter, 0)) }, //Ostersonntag
+        { name: holidays[5], date: format(addDays(easter, 1)) }, //Ostermontag
+        { name: holidays[6], date: format(new Date(year, 4, 1)) }, //Tag der Arbeit
+        { name: holidays[7], date: format(addDays(easter, 40)) }, //Himmelfahrt
+        { name: holidays[8], date: format(addDays(easter, 50)) }, //Pfingstsonntag
+        { name: holidays[9], date: format(addDays(easter, 51)) }, //Pfingstmontag
+        { name: holidays[10], date: format(addDays(easter, 60)) }, //Frohnleichnam
+        { name: holidays[11], date: format(new Date(year, 7, 15)) }, //Maria Himmelfahrt
+        { name: holidays[12], date: format(new Date(year, 8, 20)) }, //Kindertag
+        { name: holidays[13], date: format(new Date(year, 9, 3)) }, //Tag der deutschen Einheit
+        { name: holidays[14], date: format(new Date(year, 9, 31)) }, //Reformationstag
+        { name: holidays[15], date: format(new Date(year, 10, 1)) }, //Allerheiligen
+        { name: holidays[16], date: format(addDays(firstAdvent, -11)) }, //Buß- und Bettag
+        { name: holidays[17], date: format(new Date(year, 11, 24)) }, //HeiligAbend
+        { name: holidays[18], date: format(new Date(year, 11, 25)) }, //Erster X-Mas Tag 
+        { name: holidays[19], date: format(new Date(year, 11, 26)) }, //Zweiter X-Mas Tag
+        { name: holidays[20], date: format(new Date(year, 11, 31)) } //Silvester
     ];
 }
 
@@ -449,7 +510,6 @@ function openPlanModal(employees) {
         });
         document.getElementById('closePlanModal').addEventListener('click', function() {
             modal.style.display = 'none';
-            //modal.reset(); // Formular zurücksetzen
         });
     });
 }
@@ -663,7 +723,13 @@ function loadFile() {
     globalEmployeesData = key; // Setzt den globalen Schlüssel für Mitarbeiterdaten
     const reader = new FileReader();
     reader.onload = function(event) {
-        const content = event.target.result;
+        const fullContent = event.target.result;
+        const stateValue = fullContent.slice(-2);
+        const content = fullContent.slice(0,-2).trim();
+
+        document.getElementById("stateSelect").disabled = true;
+        document.querySelector('#stateSelect').value = stateValue;
+        localStorage.setItem("selectedState", stateValue);
         localStorage.setItem(key, content);
         document.getElementById("titleTeamName").textContent = key; // Setzt den Titel des Teamnamens
         console.log("Datei erfolgreich geladen und im LocalStorage unter dem Schlüssel gespeichert: " + key + " " + globalEmployeesData);
@@ -679,6 +745,7 @@ function loadFile() {
 function saveFile() {
     const filename = document.getElementById("saveFilename").value.trim();
     const data = localStorage.getItem(globalEmployeesData);
+    const stateValue = "BB";
     if (!filename) {
         alert("Bitte geben Sie einen Dateinamen ein.");
         return;
@@ -687,7 +754,7 @@ function saveFile() {
         alert("Keine Mitarbeiterdaten zum Speichern gefunden.");
         return;
     }
-    const blob = new Blob([data], { type: 'text/plain' });
+    const blob = new Blob([data, stateValue], { type: 'text/plain' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = filename + '.team'; 
