@@ -18,11 +18,12 @@
     <button onclick="showEmployees()">Aktualisieren</button>
     <div class="optiongroup">
     <label>Bundesland:</label>
-    <select id="stateSelect" title="Bundesland für Feiertage auswählen">
+    <select id="stateSelect" onchange="toggleActionButtons()" title="Bundesland für Feiertage auswählen">
+        <option value="none" selected></option>
         <option value="BW">Baden-Württemberg</option>
         <option value="BY">Bayern</option>
         <option value="BE">Berlin</option>
-        <option value="BB" selected>Brandenburg</option>
+        <option value="BB">Brandenburg</option>
         <option value="HB">Bremen</option>
         <option value="HH">Hamburg</option>
         <option value="HE">Hessen</option>
@@ -40,7 +41,7 @@
 
 </nav>
 
-<div class="action-buttons">
+<div id = "action-buttonsID" class="action-buttons">
     <button id="openModal">Neuen Mitarbeiter hinzufügen</button>
     <button onclick="createShiftPlan()">Bereitschaftsplan erstellen</button>
     <button onclick="exportPlan()">Bereitschaftsplan exportieren</button>
