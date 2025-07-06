@@ -12,6 +12,9 @@
         - Bundesland disable if team in local storage is not empty und save Bundesland in .team 
         - Feiertage überprüfen
         - Bugfix: Versionskontrolle nur alert wenn online Version größer ist als aktuelle
+        - Bugfix: letzte Feiertage wurden nicht angezeigt
+        - Bugfix: correct display of holiday
+        - Bugfix: gernerated Plan was wrong (ignored holidays)
 */
 
 
@@ -175,7 +178,7 @@ async function checkVersion() {
             const remote = JSON.parse(data.contents);
             const remoteVersion = remote.version;
 
-            if (remoteVersion >= currentVersion) {
+            if (remoteVersion > currentVersion) {
             alert(`Neue Version verfügbar: ${remoteVersion} (aktuell: ${currentVersion})`);
             }
         })
@@ -227,7 +230,7 @@ function calculateFirstAdvent(year){
     let firstAdvent = new Date(christmas);
     let sundaysCount = 0;
 
-    while (sundaysCount < 4){
+    for (let index = 0 ; sundaysCount < 4 && index <= 31 ;index++){
         firstAdvent.setDate(firstAdvent.getDate() -1);
         if (firstAdvent.getDay === 0){ // Sunday = 0
             sundaysCount++;
@@ -237,37 +240,48 @@ function calculateFirstAdvent(year){
     return firstAdvent;
 }
 
-// gibt die Feiertage für ein bestimmtes Jahr zurück
+// gibt die Feiertage des Bundeslandes für ein bestimmtes Jahr zurück
 function getHolidays(year) {
     const easter = calculateEaster(year);
     const firstAdvent = calculateFirstAdvent(year);
     const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+    const format = date => formatDateGerman(date);
 
-    const format = date => date.toISOString().split('T')[0];
+    let currentHolidays = [];
 
-    return [
-        { name: holidays[0], date: format(new Date(year, 0, 1)) }, //Neujahr
-        { name: holidays[1], date: format(new Date(year, 0, 6) ) }, //Heilige drei Könige
-        { name: holidays[2], date: format(new Date(year, 2, 8)) }, // Frauentag
-        { name: holidays[3], date: format(addDays(easter, -2)) }, //Karfreitag
-        { name: holidays[4], date: format(addDays(easter, 0)) }, //Ostersonntag
-        { name: holidays[5], date: format(addDays(easter, 1)) }, //Ostermontag
-        { name: holidays[6], date: format(new Date(year, 4, 1)) }, //Tag der Arbeit
-        { name: holidays[7], date: format(addDays(easter, 40)) }, //Himmelfahrt
-        { name: holidays[8], date: format(addDays(easter, 50)) }, //Pfingstsonntag
-        { name: holidays[9], date: format(addDays(easter, 51)) }, //Pfingstmontag
-        { name: holidays[10], date: format(addDays(easter, 60)) }, //Frohnleichnam
-        { name: holidays[11], date: format(new Date(year, 7, 15)) }, //Maria Himmelfahrt
-        { name: holidays[12], date: format(new Date(year, 8, 20)) }, //Kindertag
-        { name: holidays[13], date: format(new Date(year, 9, 3)) }, //Tag der deutschen Einheit
-        { name: holidays[14], date: format(new Date(year, 9, 31)) }, //Reformationstag
-        { name: holidays[15], date: format(new Date(year, 10, 1)) }, //Allerheiligen
-        { name: holidays[16], date: format(addDays(firstAdvent, -11)) }, //Buß- und Bettag
-        { name: holidays[17], date: format(new Date(year, 11, 24)) }, //HeiligAbend
-        { name: holidays[18], date: format(new Date(year, 11, 25)) }, //Erster X-Mas Tag 
-        { name: holidays[19], date: format(new Date(year, 11, 26)) }, //Zweiter X-Mas Tag
-        { name: holidays[20], date: format(new Date(year, 11, 31)) } //Silvester
+        const allHolidays = [
+        {index: 0, name: holidays[0], date: format(new Date(year, 0, 1)) }, //Neujahr
+        {index: 1, name: holidays[1], date: format(new Date(year, 0, 6) ) }, //Heilige drei Könige
+        {index: 2, name: holidays[2], date: format(new Date(year, 2, 8)) }, // Frauentag
+        {index: 3, name: holidays[3], date: format(addDays(easter, -2)) }, //Karfreitag
+        {index: 4, name: holidays[4], date: format(addDays(easter, 0)) }, //Ostersonntag
+        {index: 5, name: holidays[5], date: format(addDays(easter, 1)) }, //Ostermontag
+        {index: 6, name: holidays[6], date: format(new Date(year, 4, 1)) }, //Tag der Arbeit
+        {index: 7, name: holidays[7], date: format(addDays(easter, 40)) }, //Himmelfahrt
+        {index: 8, name: holidays[8], date: format(addDays(easter, 50)) }, //Pfingstsonntag
+        {index: 9, name: holidays[9], date: format(addDays(easter, 51)) }, //Pfingstmontag
+        {index: 10, name: holidays[10], date: format(addDays(easter, 60)) }, //Frohnleichnam
+        {index: 11, name: holidays[11], date: format(new Date(year, 7, 15)) }, //Maria Himmelfahrt
+        {index: 12, name: holidays[12], date: format(new Date(year, 8, 20)) }, //Kindertag
+        {index: 13, name: holidays[13], date: format(new Date(year, 9, 3)) }, //Tag der deutschen Einheit
+        {index: 14, name: holidays[14], date: format(new Date(year, 9, 31)) }, //Reformationstag
+        {index: 15, name: holidays[15], date: format(new Date(year, 10, 1)) }, //Allerheiligen
+        {index: 16, name: holidays[16], date: format(addDays(firstAdvent, -11)) }, //Buß- und Bettag
+        {index: 17, name: holidays[17], date: format(new Date(year, 11, 24)) }, //HeiligAbend
+        {index: 18, name: holidays[18], date: format(new Date(year, 11, 25)) }, //Erster X-Mas Tag 
+        {index: 19, name: holidays[19], date: format(new Date(year, 11, 26)) }, //Zweiter X-Mas Tag
+        {index: 20, name: holidays[20], date: format(new Date(year, 11, 31)) } //Silvester
     ];
+
+    if (localStorage.getItem("selectedState")){
+        const inState = localStorage.getItem("selectedState")
+        for (let index = 0; index < Bundeslaender[inState].holidays.length; index++) {
+            currentHolidays.push(allHolidays[Bundeslaender[inState].holidays[index]]);
+            //console.log("Bundesland: ",Bundeslaender[inState].holidays[index]);
+        }
+    }
+    return currentHolidays;
+
 }
 
 function addVacation(ev, startName, endName, vacTableName) {
@@ -343,6 +357,10 @@ function formatDateGerman(date) {
     return realdate.toLocaleDateString('de-DE');
 }
 
+function isSameDayMonth(date1, date2) {
+    return date1.getDate() === date2.getDate() && date1.getMonth() === date2.getMonth();
+}
+
 function initHolidayTable(holTable) {
     console.log("Initialisiere Feiertagstabelle:", holTable);
     if (!holTable) {
@@ -366,9 +384,7 @@ function initHolidayTable(holTable) {
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
         cell1.innerText = holidays[h]; // Feiertagsname
-        if (employee != null) {
-            holValue = (employee.lastOnHolidayYear && employee.lastOnHolidayYear[h]) || null; // Fallback auf 0, wenn kein Wert vorhanden ist
-        }
+        holValue = (employee.lastOnHolidayYear && employee.lastOnHolidayYear[holidays[h]]) ? employee.lastOnHolidayYear[holidays[h]] : null;
         cell2.innerHTML = `<input type="number" placeholder="Jahr" value="${holValue}" style="width:80px;" min="1999"  max="2100" step="1" pattern="\\d{4}"  title="Bitte vierstellige Jahreszahl (z. B. 2025) eingeben"">`;
     }
 }
@@ -475,7 +491,7 @@ async function createShiftPlan() {
     renderPlan();   
 }
 
-// Öffnet das Plan-Modal und generiert den Schichtplan
+// Öffnet das Plan-Modal
 function openPlanModal(employees) {
     return new Promise((resolve) => {
         const modal = document.getElementById('planOverlay');
@@ -517,81 +533,96 @@ function openPlanModal(employees) {
 // Plan-Generator
 function generatePlan(employees, startDate, endDate, periodLength = 7, employeesPerShift = 1) {
     const assignments = [];
-
     if (!employees.length || startDate >= endDate) return assignments;
 
-    const ordered = [...employees].sort((a, b) => getLastHolidayInterval(a) - getLastHolidayInterval(b));
     let periodStart = new Date(startDate);
+    let ordered = [...employees];
 
     while (periodStart <= endDate) {
         let periodEnd = new Date(periodStart);
         periodEnd.setDate(periodEnd.getDate() + periodLength - 1);
         if (periodEnd > endDate) periodEnd = new Date(endDate);
-
-        const assignedEmployees = [];
+        let assignedThisPeriod = [];
         for (let i = 0; i < employeesPerShift; i++) {
-            const employee = getNextAvailableEmployee(ordered, periodStart, periodEnd);
-            if (!employee) {
+            let found = false;
+            for (let j = 0; j < ordered.length; j++) {
+                const employee = ordered[j];
+                if (assignedThisPeriod.includes(employee.id)) continue;
+                if (getAvailableEmployee(employee, periodStart, periodEnd) !== null) {
+                    assignments.push({
+                        employeeId: employee.id,
+                        firstName: employee.firstName,
+                        lastName: employee.lastName,
+                        startShiftDate: new Date(periodStart),
+                        endShiftDate: new Date(periodEnd)
+                    });
+                    ordered.push(ordered.splice(j, 1)[0]);
+                    assignedThisPeriod.push(employee.id)
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
                 throw new Error(`Ab dem ${periodStart.toLocaleDateString()} steht kein freier Mitarbeiter zur Verfügung.`);
             }
-
-            assignments.push({
-                employeeId: employee.id,
-                firstName: employee.firstName,
-                lastName: employee.lastName,
-                startShiftDate: new Date(periodStart),
-                endShiftDate: new Date(periodEnd)
-            });
-
-            assignedEmployees.push(employee);
-            // Entferne den Mitarbeiter temporär aus der Rotation für diesen Zeitraum
-            const idx = ordered.indexOf(employee);
-            ordered.splice(idx, 1);
         }
-
-        // Nach der Zuweisung kommen die MA ans Ende der Liste zurück
-        ordered.push(...assignedEmployees);
         periodStart.setDate(periodStart.getDate() + periodLength);
     }
+
     localStorage.setItem('shiftPlan', JSON.stringify(assignments));
     return assignments;
 }
 
-// Abstand seit letztem Feiertagsdienst in Jahren
-function getLastHolidayInterval(emp) {
-    if (!emp || !Object.keys(emp.lastOnHolidayYear).length) {
-    return Number.MAX_SAFE_INTEGER;
-    }
-    const years = Object.values(emp.lastOnHolidayYear);
-    const lastYear = Math.min(...years);
-    return new Date().getFullYear() - lastYear;
-}
 
-function getNextAvailableEmployee(ordered, periodStart, periodEnd) {
-    for (const emp of ordered) {
-        // Urlaub prüfen
-        const onVacation = emp.vacations.some(v => {
-            const vStart = new Date(v.start);
-            const vEnd = new Date(v.end);
-            return vStart <= periodEnd && vEnd >= periodStart;
-        });
-        if (onVacation) continue;
-        // Feiertagsprüfung
-        let conflict = false;
-        for (const h of holidays) {
-            const holidayDate = new Date(h.date);
-            if (holidayDate >= periodStart && holidayDate < periodEnd) {
-                const lastYear = emp.lastOnHolidayYear[holidayDate];
-                if (lastYear && lastYear === holidayDate.getFullYear() - 1) {
-                    conflict = true;
-                    break;
-                }
-            }
+function getNextAvailableEmployee(employees, periodStart, periodEnd)  {
+    for (const emp of employees) {
+
+        const score = getAvailableEmployee(emp, periodStart, periodEnd);
+        if (score !== null) {
+            return emp;
         }
-        if (conflict) continue;
-        return emp;
     }
     return null;
+}
+
+function getAvailableEmployee(emp, periodStart, periodEnd) {
+    //sicherstellen, dass Datumsformat verwendet wird
+    if (!(periodStart instanceof Date)) periodStart = new Date(periodStart);
+    if (!(periodEnd instanceof Date)) periodEnd = new Date(periodEnd);
+    const startYear = new Date(periodStart).getFullYear();
+    const endYear = new Date(periodEnd).getFullYear();
+
+console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
+
+    // Urlaub prüfen
+    const onVacation = emp.vacations.some(v => {
+        const vStart = new Date(v.start);
+        const vEnd = new Date(v.end);
+        return vStart <= periodEnd && vEnd >= periodStart;
+    });
+
+    if (onVacation) return null; // Konflikt mit Urlaub
+
+    // Feiertagsprüfung
+    const holidaysThisYear = getHolidays(startYear);
+    const lastYear = holidaysThisYear.some(h => {
+        const hDate = new Date(h.date);
+        //console.log(hDate, ">=", periodStart ,"&&", hDate, "<=", periodEnd);
+        if (hDate >= periodStart && hDate <= periodEnd) {
+        return Object.entries(emp.lastOnHolidayYear || {}).some(([, year]) => {
+            const lastYearHoliday = getHolidays(year).find(h2 => isSameDayMonth(new Date(h2.date), hDate));
+            return lastYearHoliday && year === startYear - 1;
+        });
+        }
+        return null;
+    });
+    if (lastYear) {
+        return null; //Konflikt mit Feiertag
+    }
+    //console.log("Vacation: ", onVacation);
+    //console.log("Holiday: ", lastYear," -> ", emp.lastOnHolidayYear);
+    return 1;
+    
 }
 
 function mapDateToHolidayType(date) {
@@ -826,6 +857,7 @@ form.addEventListener('submit', e => {
             }
             holidayData[holiday] = Number(year);
             }
+        //else holidayData[holiday] = 0;
     }
 
     const employee = {
