@@ -7,6 +7,11 @@ Ein Bereitschaftsplaner, der im Browser und vollständig lokal läuft.
 Mit diesem Bereitschaftsplaner lässt sich im Browser ein Team erstellen und anschließend ein Bereitschaftsplan erstellen, welcher auch als XLSX-Datei exportiert werden kann.  
 Der Planer operiert vollständig lokal.
 
+## Updatehinweise
+
+- ab Version 0.2.2 .team Dateien nicht mehr kompatibel mit den Alten
+  -  um das zu ändern muss man das Bundeslandkürzel in Großbuchstaben am Ende der .team Datei angefügen
+
 ## Getting Started
 
 1. Lade den `.zip`-Ordner herunter  
@@ -15,6 +20,7 @@ Der Planer operiert vollständig lokal.
 
 ## Erstes Team erstellen
 
+- Wähle zuerst das passende Bundesland aus
 - Klicke auf den Button **Neuen Mitarbeiter hinzufügen**
 - Fülle das Pop-up-Fenster aus:
   - Vor- und Nachname eingeben
