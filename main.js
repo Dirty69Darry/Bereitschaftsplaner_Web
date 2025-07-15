@@ -27,7 +27,7 @@ let vacations = []; // Array für Urlaubsanträge
 //global Konstanten
 const dataUrl = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
 const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
-const currentVersion = "0.2.2"; // Aktuelle Version der Anwendung
+const currentVersion = "0.2.3"; // Aktuelle Version der Anwendung
 const openBtn  = document.getElementById('openModal');
 const closeBtn = document.getElementById('closeModal');
 const addOverlay  = document.getElementById('addOverlay');
@@ -166,7 +166,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Überprüft die Version
 async function checkVersion() {
-        document.getElementById("version-label").innerHTML = `<a href = ${dataUrl} target ="_blank">${currentVersion}</a>`;
+        document.getElementById("version-label").innerHTML = `aktuelle Version: <a href = ${dataUrl} target ="_blank">${currentVersion}</a>`;
 
         const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(versionUrl)}`;
         fetch(apiUrl)
@@ -205,6 +205,24 @@ function toggleActionButtons(){
     }
 }
 
+function openBugReport() {
+    const title = encodeURIComponent("Bug Report: [Kurze Fehlerbeschreibung]");
+    const body = encodeURIComponent(
+        "" +
+        "Bitte beschreiben Sie den Fehler hier:\n\n" +
+        "---\n" +
+        "Technische Details:\n" +
+        `Datum: ${new Date().toLocaleString()}\n` +
+        `Browser: ${navigator.userAgent}\n` +
+        `Plattform: ${navigator.platform}\n`+
+        `Version: ${currentVersion}\n` +
+        "---\n\n" 
+    );
+
+    //window.open(dataUrl +'/issues/new?template=bug_report.md');
+    window.open (dataUrl + '/issues/new?title=' + title + '&body=' + body, "_blank");
+}
+
 /*--------------------Feiertage und Urlaub----------------------------- */
 // Berechnet das Datum von Ostersonntag
 function calculateEaster(year) {
@@ -240,7 +258,6 @@ function calculateFirstAdvent(year){
     return firstAdvent;
 }
 
-// gibt die Feiertage des Bundeslandes für ein bestimmtes Jahr zurück
 function getHolidays(year) {
     const easter = calculateEaster(year);
     const firstAdvent = calculateFirstAdvent(year);
@@ -369,14 +386,12 @@ function initHolidayTable(holTable) {
     }
     // Lese das employees-Array aus dem localStorage
     const employees = JSON.parse(localStorage.getItem(globalEmployeesData) || "[]");
-    let employee = {};
+    let employee = employees[currentEditIndex] || {};
     let holValue = null;
     const thisholidays = Bundeslaender[document.getElementById("stateSelect").value]; // Aktuell ausgewähltes Bundesland
 
     if (!thisholidays || !thisholidays.holidays || thisholidays.holidays.length === 0) {return console.error("Keine Feiertage für das ausgewählte Bundesland gefunden.");}
-    if (currentEditIndex >= 0 && employees.length > 0) {
-        employee = employees[currentEditIndex];
-    }
+
 
     const table = document.getElementById(holTable);
     for (const h of thisholidays.holidays) {
@@ -811,7 +826,7 @@ openBtn.addEventListener('click', () => {
     const addVacationBtn = document.getElementById("addVacationBtn");
     // Vor dem Hinzufügen: alle EventListener entfernen
     addVacationBtn.replaceWith(addVacationBtn.cloneNode(true));
-        document.getElementById("addVacationBtn").addEventListener("click", (e) => addVacation(e, 'vacationBegin', 'vacationEnd', 'vacationTable')); 
+    document.getElementById("addVacationBtn").addEventListener("click", (e) => addVacation(e, 'vacationBegin', 'vacationEnd', 'vacationTable')); 
 
 });
 
@@ -864,7 +879,7 @@ form.addEventListener('submit', e => {
         id,
         firstName,
         lastName,
-        vacations,
+        vacations: [...vacations],
         lastOnHolidayYear: holidayData
     };
 
