@@ -27,7 +27,9 @@ let vacations = []; // Array für Urlaubsanträge
 //global Konstanten
 const dataUrl = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
 const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
+
 const currentVersion = "0.2.4"; // Aktuelle Version der Anwendung
+
 const openBtn  = document.getElementById('openModal');
 const closeBtn = document.getElementById('closeModal');
 const addOverlay  = document.getElementById('addOverlay');
