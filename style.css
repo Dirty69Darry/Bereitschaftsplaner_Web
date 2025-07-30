@@ -172,6 +172,18 @@
         font-family: sans-serif;
         font-size: 14px;
     }
+    #bug-report {
+        padding: 0.6em 1.2em;
+        font-size: 1rem;
+        cursor: pointer;
+        background-color: #bd361c;
+        border: none;
+        border-radius: 6px;
+        color: white;
+    }
+    #bug-report:hover {
+        background-color: #982a14;
+    }
     #newEmployeeBtn {
         width: 620px;
         font-size: 16px;
