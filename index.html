@@ -47,7 +47,7 @@
 <div id = "action-buttonsID" class="action-buttons">
     <button id="openModal">Neuen Mitarbeiter hinzufügen</button>
     <button onclick="createShiftPlan()">Bereitschaftsplan erstellen</button>
-    <button onclick="exportPlan()">Bereitschaftsplan exportieren</button>
+    <button id="exportPlan">Bereitschaftsplan exportieren</button> <!-- Verwendung excelexport.js -->
 </div>
 
 <div class="employee-list">
@@ -251,6 +251,6 @@
 </div>
 
 <script src="main.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="src/excelexport.js"></script>
 </body>
 </html>
