@@ -20,6 +20,8 @@ Der Planer operiert vollständig lokal.
     - cleanup main.js
     - Excel Export Metadaten ergänzt
     - Excel Export Name der Datei mit Teamnamen und Jahr erweitern
+    - letzte Bereitschaft im Edit anlegen un speichern
+        -> mit Logik versehen, sodass erste Periode nicht ein MA zugewiesen bekommt, der gerade Bereitschaft hatte
 
 ## Getting Started
 
