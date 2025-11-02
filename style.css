@@ -175,6 +175,7 @@
     #bug-report {
         padding: 0.6em 1.2em;
         font-size: 1rem;
+        text-align: center;
         cursor: pointer;
         background-color: #bd361c;
         border: none;

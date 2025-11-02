@@ -2,140 +2,39 @@
 /*
     TODO:
     - die großen .addEventListener in function umwandeln
+    - letzte Bereitschaft im Edit anlegen un speichern
+        -> mit Logik versehen, sodass erste Periode nicht ein MA zugewiesen bekommt, der gerade Bereitschaft hatte
     - Excel Tabelle erweitern 
-        - Metadaten wie Erstellungsdatum, Ersteller, Version
+        - zweite Excel-Tabelle Monatsweise Zeile pro Mitarbeiter
     
     DONE:
-    -ExcelTabelle erweitern
-        - Kalendarische Übersicht für jeden Mitarbeiter
+    - Globals.js in Web-Speicher Laden und damit arbeiten
+    - Version Check mit Fallbacks
+    - cleanup main.js
+    - Excel Export Metadaten ergänzt
+    - Excel Export Name der Datei mit Teamnamen und Jahr erweitern
 */
 
 
 /*-------------------Globale Variable und Konstanten -------------------*/
-// global Variablen
-let globalEmployeesData = "TEAM.team"; // Local Storage Key für default Mitarbeiterdaten
-let currentEditIndex = null; // Aktueller Index für den zu bearbeitenden Mitarbeiter
-let vacations = []; // Array für Urlaubsanträge
+// jetzt in globals.js
+const OPENBTN  = document.getElementById('openModal');
+const CLOSEBTN = document.getElementById('closeModal');
+const ADDOVERLAY  = document.getElementById('addOverlay');
+const ADDWINDOW  = document.getElementById('addWindow');
+const FORM     = document.getElementById('employeeForm');
 
-//global Konstanten
-const dataUrl = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
-const versionUrl = "https://raw.githubusercontent.com/Dirty69Darry/Bereitschaftsplaner_Web/main/meta.json"; // URL zur Versionskontrolle
-<<<<<<< Updated upstream
-
-const currentVersion = "0.2.4"; // Aktuelle Version der Anwendung
-
-=======
-const currentVersion = "0.2.5"; // Aktuelle Version der Anwendung
->>>>>>> Stashed changes
-const openBtn  = document.getElementById('openModal');
-const closeBtn = document.getElementById('closeModal');
-const addOverlay  = document.getElementById('addOverlay');
-const addWindow  = document.getElementById('addWindow');
-const form     = document.getElementById('employeeForm');
-
-const openEditBtn  = document.getElementById('openEditModal');
-const closeEditBtn = document.getElementById('closeEditModal');
-const editOverlay  = document.getElementById('editOverlay');
-const editWindow  = document.getElementById('editWindow');
-const editform     = document.getElementById('EditForm');
-
-// Feiertage
-const holidays = [
-    "Neujahr", //0
-    "Heilige Drei Könige", //1
-    "Internationaler Frauentag", //2
-    "Karfreitag", //3
-    "Ostersonntag", //4
-    "Ostermontag",  //5
-    "Tag der Arbeit", //6
-    "Christi Himmelfahrt", //7
-    "Pfingstensonntag", //8
-    "Pfingstmontag",    //9
-    "Fronleichnam", //10
-    "Mariä Himmelfahrt", //11
-    "Weltkindertag",    //12
-    "Tag der Deutschen Einheit",   //13
-    "Reformationstag",  //14
-    "Allerheiligen",    //15
-    "Buß- und Betttag",    //16
-    "Weihnachten",      //17
-    "1. Weihnachtstag", //18
-    "2. Weihnachtstag", //19
-    "Silvester"        //20
-];
-
-// Feiertage in Bundesländern
-const Bundeslaender = {
-    BW: {
-        name: "Baden-Württemberg",
-        holidays: [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 17, 18, 19, 20]
-    },
-    BY: {
-        name: "Bayern",
-        holidays: [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 18, 19, 20]
-    },
-    BE: {
-        name: "Berlin",
-        holidays: [0, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
-    },
-    BB: {
-        name: "Brandenburg",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
-    },
-    HB: {
-        name: "Bremen",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
-    },
-    HH: {
-        name: "Hamburg",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 18, 17, 19, 20]
-    },
-    HE: {
-        name: "Hessen",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 17, 18, 19, 20]
-    },
-    MV: {
-        name: "Mecklenburg-Vorpommern",
-        holidays: [0, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
-    },
-    NI: {
-        name: "Niedersachsen",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 17, 18, 19, 20]
-    },
-    NW: {
-        name: "Nordrhein-Westfalen",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 17, 18, 19, 20]
-    },
-    RP: {
-        name: "Rheinland-Pfalz",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 17, 18, 19, 20]
-    },
-    SL: {
-        name: "Saarland",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 18, 19, 20]
-    },
-    SN: {
-        name: "Sachsen",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 16, 17, 18, 19, 20]
-    },
-    ST: {
-        name: "Sachsen-Anhalt",
-        holidays: [0, 1, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
-    },
-    SH: {
-        name: "Schleswig-Holstein",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 17, 18, 19, 20]
-    },
-    TH: {
-        name: "Thüringen",
-        holidays: [0, 3, 4, 5, 6, 7, 8, 9, 13, 14, 17, 18, 19, 20]
-    }
-};
+const OPENEDITBTN  = document.getElementById('openEditModal');
+const CLOSEEDITBTN = document.getElementById('closeEditModal');
+const EDITOVERLAY  = document.getElementById('editOverlay');
+const EDITWINDOW  = document.getElementById('editWindow');
+const EDITFORM     = document.getElementById('EditForm');
 
 /*--------------------Main-Event und Organisation----------------------------- */
 // Event-Listener Main
 window.addEventListener('DOMContentLoaded', () => {
     const stateSelect = document.getElementById("stateSelect");
+    console.log(`${CLOSEBTN}`);
     if (getTeamFromLocalStorage().teamKey != null) {
         globalEmployeesData = getTeamFromLocalStorage().teamKey; // Setzt den globalen Schlüssel für Mitarbeiterdaten
         document.getElementById("titleTeamName").textContent = globalEmployeesData.split('.team')[0]; // Setzt den Titel des Teamnamens
@@ -150,7 +49,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const stored = getEmployees(getTeamFromLocalStorage().teamKey) || [];
     stored.forEach(emp => receiveEmployee(emp));
     showEmployees(); // Mitarbeiter anzeigen
-    checkVersion(); // Überprüft die Version
+    startVersionCheck(); // Überprüft die Version
 
     //Bundesland auswählen und nicht nachher änderbar 
 
@@ -163,30 +62,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Überprüft die Version
-async function checkVersion() {
-        document.getElementById("version-label").innerHTML = `aktuelle Version: <a href = ${dataUrl} target ="_blank">${currentVersion}</a>`;
-
-        const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(versionUrl)}`;
-        fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) throw new Error("Fehler beim Abrufen der Remote-Version");
-            return response.json();
-        })
-        .then(data => {
-            const remote = JSON.parse(data.contents);
-            const remoteVersion = remote.version;
-
-            if (remoteVersion > currentVersion) {
-            alert(`Neue Version verfügbar: ${remoteVersion} (aktuell: ${currentVersion})`);
-            }
-        })
-        .catch(error => {
-            console.error("Versionsprüfung fehlgeschlagen:", error);
-        });
-}
-
-//enable/disable Action-Buttons
 function toggleActionButtons(){
     const stateSelect = document.getElementById("stateSelect");
     const div = document.getElementById("action-buttonsID");
@@ -202,102 +77,6 @@ function toggleActionButtons(){
             btn => btn.disabled = false
         );
     }
-}
-
-function openBugReport() {
-    const title = encodeURIComponent("Bug Report: [Kurze Fehlerbeschreibung]");
-    const body = encodeURIComponent(
-        "" +
-        "Bitte beschreiben Sie den Fehler hier:\n\n" +
-        "---\n" +
-        "Technische Details:\n" +
-        `Datum: ${new Date().toLocaleString()}\n` +
-        `Browser: ${navigator.userAgent}\n` +
-        `Plattform: ${navigator.platform}\n`+
-        `Version: ${currentVersion}\n` +
-        "---\n\n" 
-    );
-
-    //window.open(dataUrl +'/issues/new?template=bug_report.md');
-    window.open (dataUrl + '/issues/new?title=' + title + '&body=' + body, "_blank");
-}
-
-/*--------------------Feiertage und Urlaub----------------------------- */
-// Berechnet das Datum von Ostersonntag
-function calculateEaster(year) {
-    const a = year % 19;
-    const b = Math.floor(year / 100);
-    const c = year % 100;
-    const d = Math.floor(b / 4);
-    const e = b % 4;
-    const f = Math.floor((b + 8) / 25);
-    const g = Math.floor((b - f + 1) / 3);
-    const h = (19 * a + b - d - g + 15) % 30;
-    const i = Math.floor(c / 4);
-    const k = c % 4;
-    const l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const month = Math.floor((h + l - 7 * m + 114) / 31);  // 3=Mar, 4=Apr
-    const day = ((h + l - 7 * m + 114) % 31) + 1;
-    return new Date(year, month - 1, day);
-}
-
-function calculateFirstAdvent(year){
-    const christmas = new Date(year, 11, 25); //4ter Advent und Heiligabend können den selben Tag haben
-    let firstAdvent = new Date(christmas);
-    let sundaysCount = 0;
-
-    for (let index = 0 ; sundaysCount < 4 && index <= 31 ;index++){
-        firstAdvent.setDate(firstAdvent.getDate() -1);
-        if (firstAdvent.getDay === 0){ // Sunday = 0
-            sundaysCount++;
-        }
-    }
-
-    return firstAdvent;
-}
-
-function getHolidays(year) {
-    const easter = calculateEaster(year);
-    const firstAdvent = calculateFirstAdvent(year);
-    const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-    const format = date => formatDateGerman(date);
-
-    let currentHolidays = [];
-
-        const allHolidays = [
-        {index: 0, name: holidays[0], date: format(new Date(year, 0, 1)) }, //Neujahr
-        {index: 1, name: holidays[1], date: format(new Date(year, 0, 6) ) }, //Heilige drei Könige
-        {index: 2, name: holidays[2], date: format(new Date(year, 2, 8)) }, // Frauentag
-        {index: 3, name: holidays[3], date: format(addDays(easter, -2)) }, //Karfreitag
-        {index: 4, name: holidays[4], date: format(addDays(easter, 0)) }, //Ostersonntag
-        {index: 5, name: holidays[5], date: format(addDays(easter, 1)) }, //Ostermontag
-        {index: 6, name: holidays[6], date: format(new Date(year, 4, 1)) }, //Tag der Arbeit
-        {index: 7, name: holidays[7], date: format(addDays(easter, 40)) }, //Himmelfahrt
-        {index: 8, name: holidays[8], date: format(addDays(easter, 50)) }, //Pfingstsonntag
-        {index: 9, name: holidays[9], date: format(addDays(easter, 51)) }, //Pfingstmontag
-        {index: 10, name: holidays[10], date: format(addDays(easter, 60)) }, //Frohnleichnam
-        {index: 11, name: holidays[11], date: format(new Date(year, 7, 15)) }, //Maria Himmelfahrt
-        {index: 12, name: holidays[12], date: format(new Date(year, 8, 20)) }, //Kindertag
-        {index: 13, name: holidays[13], date: format(new Date(year, 9, 3)) }, //Tag der deutschen Einheit
-        {index: 14, name: holidays[14], date: format(new Date(year, 9, 31)) }, //Reformationstag
-        {index: 15, name: holidays[15], date: format(new Date(year, 10, 1)) }, //Allerheiligen
-        {index: 16, name: holidays[16], date: format(addDays(firstAdvent, -11)) }, //Buß- und Bettag
-        {index: 17, name: holidays[17], date: format(new Date(year, 11, 24)) }, //HeiligAbend
-        {index: 18, name: holidays[18], date: format(new Date(year, 11, 25)) }, //Erster X-Mas Tag 
-        {index: 19, name: holidays[19], date: format(new Date(year, 11, 26)) }, //Zweiter X-Mas Tag
-        {index: 20, name: holidays[20], date: format(new Date(year, 11, 31)) } //Silvester
-    ];
-
-    if (localStorage.getItem("selectedState")){
-        const inState = localStorage.getItem("selectedState")
-        for (let index = 0; index < Bundeslaender[inState].holidays.length; index++) {
-            currentHolidays.push(allHolidays[Bundeslaender[inState].holidays[index]]);
-            //console.log("Bundesland: ",Bundeslaender[inState].holidays[index]);
-        }
-    }
-    return currentHolidays;
-
 }
 
 function addVacation(ev, startName, endName, vacTableName) {
@@ -368,11 +147,6 @@ function deleteVacation(index) {
     updateVacationTable();
 }
 
-function formatDateGerman(date) {
-    let realdate = new Date(date);
-    return realdate.toLocaleDateString('de-DE');
-}
-
 function isSameDayMonth(date1, date2) {
     return date1.getDate() === date2.getDate() && date1.getMonth() === date2.getMonth();
 }
@@ -387,18 +161,18 @@ function initHolidayTable(holTable) {
     const employees = JSON.parse(localStorage.getItem(globalEmployeesData) || "[]");
     let employee = employees[currentEditIndex] || {};
     let holValue = null;
-    const thisholidays = Bundeslaender[document.getElementById("stateSelect").value]; // Aktuell ausgewähltes Bundesland
+    const thisholidays = BUNDESLAENDER[document.getElementById("stateSelect").value]; // Aktuell ausgewähltes Bundesland
 
-    if (!thisholidays || !thisholidays.holidays || thisholidays.holidays.length === 0) {return console.error("Keine Feiertage für das ausgewählte Bundesland gefunden.");}
+    if (!thisholidays || !thisholidays.HOLIDAYS || thisholidays.HOLIDAYS.length === 0) {return console.error("Keine Feiertage für das ausgewählte Bundesland gefunden.");}
 
 
     const table = document.getElementById(holTable);
-    for (const h of thisholidays.holidays) {
+    for (const h of thisholidays.HOLIDAYS) {
         const row = table.insertRow();
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
-        cell1.innerText = holidays[h]; // Feiertagsname
-        holValue = (employee.lastOnHolidayYear && employee.lastOnHolidayYear[holidays[h]]) ? employee.lastOnHolidayYear[holidays[h]] : null;
+        cell1.innerText = HOLIDAYS[h]; // Feiertagsname
+        holValue = (employee.lastOnHolidayYear && employee.lastOnHolidayYear[HOLIDAYS[h]]) ? employee.lastOnHolidayYear[HOLIDAYS[h]] : null;
         cell2.innerHTML = `<input type="number" placeholder="Jahr" value="${holValue}" style="width:80px;" min="1999"  max="2100" step="1" pattern="\\d{4}"  title="Bitte vierstellige Jahreszahl (z. B. 2025) eingeben"">`;
     }
 }
@@ -621,7 +395,6 @@ console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
     const holidaysThisYear = getHolidays(startYear);
     const lastYear = holidaysThisYear.some(h => {
         const hDate = new Date(h.date);
-        //console.log(hDate, ">=", periodStart ,"&&", hDate, "<=", periodEnd);
         if (hDate >= periodStart && hDate <= periodEnd) {
         return Object.entries(emp.lastOnHolidayYear || {}).some(([, year]) => {
             const lastYearHoliday = getHolidays(year).find(h2 => isSameDayMonth(new Date(h2.date), hDate));
@@ -633,14 +406,11 @@ console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
     if (lastYear) {
         return null; //Konflikt mit Feiertag
     }
-    //console.log("Vacation: ", onVacation);
-    //console.log("Holiday: ", lastYear," -> ", emp.lastOnHolidayYear);
     return 1;
     
 }
 
 function mapDateToHolidayType(date) {
-    // Beispiel: Key als "MM-DD"
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     return `${mm}-${dd}`;
@@ -773,11 +543,11 @@ function saveFile() {
 
 /**--------------------Mitarbeiter hinzufügen----------------------------------------------------*/
 //Modal-Elemente für neuen Mitarbeiter
-openBtn.addEventListener('click', () => {
+OPENBTN.addEventListener('click', () => {
 
-    addOverlay.style.display = 'flex';
-    addWindow.scrollTop = 0; // Scrollen nach oben
-    form.reset(); // Formular zurücksetzen
+    ADDOVERLAY.style.display = 'flex';
+    ADDWINDOW.scrollTop = 0; // Scrollen nach oben
+    FORM.reset(); // Formular zurücksetzen
     vacations.splice(0, vacations.length); // Urlaubsanträge zurücksetzen
     currentEditIndex = null; // Index zurücksetzen
     updateVacationTable("vacationTable"); // Urlaubstabelle initialisieren
@@ -791,23 +561,23 @@ openBtn.addEventListener('click', () => {
 });
 
 // Modal Neuer Mitarbeiter schließen
-closeBtn.addEventListener('click', () => {
+CLOSEBTN.addEventListener('click', () => {
     document.getElementById("vacationTable").querySelector("tbody").innerHTML = ""; // Urlaubstabelle leeren
     document.getElementById("holidaysTable").innerHTML = ""; // Feiertagstabelle leeren
     document.getElementById("holidaysTable").innerHTML = "<thead><tr><th>Feiertag</th><th>Jahr</th></tr></thead>";
-    addOverlay.style.display = 'none';
-    form.reset();
+    ADDOVERLAY.style.display = 'none';
+    FORM.reset();
 });
 
 // Modal Neuer Mitarbeiter schließen bei Klick außerhalb des Fensters
-addOverlay.addEventListener('click', e => {
-if (e.target === addOverlay) {
-    closeBtn.click(); // Schließt das Modal
+ADDOVERLAY.addEventListener('click', e => {
+if (e.target === ADDOVERLAY) {
+    CLOSEBTN.click(); // Schließt das Modal
 }
 });
 
 // Modal für Mitarbeiter speichern
-form.addEventListener('submit', e => {
+FORM.addEventListener('submit', e => {
     e.preventDefault();
     const firstName = document.getElementById('forename').value.trim();
     const lastName  = document.getElementById('surname').value.trim();
@@ -832,7 +602,6 @@ form.addEventListener('submit', e => {
             }
             holidayData[holiday] = Number(year);
             }
-        //else holidayData[holiday] = 0;
     }
 
     const employee = {
@@ -852,7 +621,7 @@ form.addEventListener('submit', e => {
     setEmployees(globalEmployeesData, employees);
     
     alert('Mitarbeiter gespeichert!');
-    closeBtn.click(); // Modal schließen
+    CLOSEBTN.click(); // Modal schließen
     vacations = []; // Urlaubsanträge zurücksetzen
     showEmployees(); // Tabelle aktualisieren
 });
@@ -866,8 +635,8 @@ function openEditModal(index) {
 
     vacations = emp.vacations ? [...emp.vacations] : []; // Urlaube des Mitarbeiters laden
     currentEditIndex = index;
-    editOverlay.style.display = 'flex';
-    editWindow.scrollTop = 0; // Scrollen nach oben
+    EDITOVERLAY.style.display = 'flex';
+    EDITWINDOW.scrollTop = 0; // Scrollen nach oben
     console.log("Editiere Mitarbeiter:", emp);
     // Felder befüllen
 
@@ -889,17 +658,17 @@ function openEditModal(index) {
 }
 
 // Edit Modal schließen
-closeEditBtn.addEventListener('click', () => {
+CLOSEEDITBTN.addEventListener('click', () => {
     document.getElementById("editHolidaysTable").innerHTML = ""; // Urlaubstabelle leeren
     document.getElementById("editHolidaysTable").innerHTML = "<thead><tr><th>Feiertag</th><th>Jahr</th></tr></thead>";
-    editOverlay.style.display = 'none';
+    EDITOVERLAY.style.display = 'none';
     editForm.reset();
 });
 
 //Modal Edit Mitarbeiter schließen bei Klick außerhalb des Fensters
-editOverlay.addEventListener('click', e => {
-if (e.target === editOverlay) {
-    closeEditBtn.click(); // Schließt das editModal
+EDITOVERLAY.addEventListener('click', e => {
+if (e.target === EDITOVERLAY) {
+    CLOSEEDITBTN.click(); // Schließt das editModal
 }
 });
 
@@ -912,7 +681,7 @@ deleteEditBtn.addEventListener('click', () => {
         console.log("Mitarbeiter gelöscht:", employees);
         alert('Mitarbeiter gelöscht!');       
         showEmployees(); // Tabelle aktualisieren
-        closeEditBtn.click(); // Modal schließen
+        CLOSEEDITBTN.click(); // Modal schließen
         currentEditIndex = null; // Index zurücksetzen
     } else {
         alert("Kein Mitarbeiter ausgewählt zum Löschen.");
@@ -967,7 +736,7 @@ editForm.addEventListener('submit', e => {
     alert('Mitarbeiter aktualisiert!');
     vacations = []; // Urlaubsanträge zurücksetzen
     currentEditIndex = null; // Index zurücksetzen
-    editOverlay.style.display = 'none';
+    EDITOVERLAY.style.display = 'none';
     showEmployees(); // Tabelle aktualisieren
     editForm.reset();
 });

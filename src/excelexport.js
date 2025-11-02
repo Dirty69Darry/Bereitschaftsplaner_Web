@@ -1,86 +1,4 @@
 
-/* ===================== Hilfsfunktionen ===================== */
-function calculateEaster(year) {
-    const a = year % 19;
-    const b = Math.floor(year / 100);
-    const c = year % 100;
-    const d = Math.floor(b / 4);
-    const e = b % 4;
-    const f = Math.floor((b + 8) / 25);
-    const g = Math.floor((b - f + 1) / 3);
-    const h = (19 * a + b - d - g + 15) % 30;
-    const i = Math.floor(c / 4);
-    const k = c % 4;
-    const l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const month = Math.floor((h + l - 7 * m + 114) / 31);  // 3=Mar, 4=Apr
-    const day = ((h + l - 7 * m + 114) % 31) + 1;
-    return new Date(year, month - 1, day);
-}
-
-function calculateFirstAdvent(year){
-    const christmas = new Date(year, 11, 25); //4ter Advent und Heiligabend können den selben Tag haben
-    let firstAdvent = new Date(christmas);
-    let sundaysCount = 0;
-
-    for (let index = 0 ; sundaysCount < 4 && index <= 31 ;index++){
-        firstAdvent.setDate(firstAdvent.getDate() -1);
-        if (firstAdvent.getDay === 0){ // Sunday = 0
-            sundaysCount++;
-        }
-    }
-
-    return firstAdvent;
-}
-
-function getHolidays(year) {
-    const easter = calculateEaster(year);
-    const firstAdvent = calculateFirstAdvent(year);
-    const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-    const format = date => formatDateGerman(date);
-
-    let currentHolidays = [];
-
-        const allHolidays = [
-        {index: 0, name: holidays[0], date: format(new Date(year, 0, 1)) }, //Neujahr
-        {index: 1, name: holidays[1], date: format(new Date(year, 0, 6) ) }, //Heilige drei Könige
-        {index: 2, name: holidays[2], date: format(new Date(year, 2, 8)) }, // Frauentag
-        {index: 3, name: holidays[3], date: format(addDays(easter, -2)) }, //Karfreitag
-        {index: 4, name: holidays[4], date: format(addDays(easter, 0)) }, //Ostersonntag
-        {index: 5, name: holidays[5], date: format(addDays(easter, 1)) }, //Ostermontag
-        {index: 6, name: holidays[6], date: format(new Date(year, 4, 1)) }, //Tag der Arbeit
-        {index: 7, name: holidays[7], date: format(addDays(easter, 40)) }, //Himmelfahrt
-        {index: 8, name: holidays[8], date: format(addDays(easter, 50)) }, //Pfingstsonntag
-        {index: 9, name: holidays[9], date: format(addDays(easter, 51)) }, //Pfingstmontag
-        {index: 10, name: holidays[10], date: format(addDays(easter, 60)) }, //Frohnleichnam
-        {index: 11, name: holidays[11], date: format(new Date(year, 7, 15)) }, //Maria Himmelfahrt
-        {index: 12, name: holidays[12], date: format(new Date(year, 8, 20)) }, //Kindertag
-        {index: 13, name: holidays[13], date: format(new Date(year, 9, 3)) }, //Tag der deutschen Einheit
-        {index: 14, name: holidays[14], date: format(new Date(year, 9, 31)) }, //Reformationstag
-        {index: 15, name: holidays[15], date: format(new Date(year, 10, 1)) }, //Allerheiligen
-        {index: 16, name: holidays[16], date: format(addDays(firstAdvent, -11)) }, //Buß- und Bettag
-        {index: 17, name: holidays[17], date: format(new Date(year, 11, 24)) }, //HeiligAbend
-        {index: 18, name: holidays[18], date: format(new Date(year, 11, 25)) }, //Erster X-Mas Tag 
-        {index: 19, name: holidays[19], date: format(new Date(year, 11, 26)) }, //Zweiter X-Mas Tag
-        {index: 20, name: holidays[20], date: format(new Date(year, 11, 31)) } //Silvester
-    ];
-
-    if (localStorage.getItem("selectedState")){
-        const inState = localStorage.getItem("selectedState")
-        for (let index = 0; index < Bundeslaender[inState].holidays.length; index++) {
-            currentHolidays.push(allHolidays[Bundeslaender[inState].holidays[index]]);
-            //console.log("Bundesland: ",Bundeslaender[inState].holidays[index]);
-        }
-    }
-    return currentHolidays;
-
-}
-
-function formatDateGerman(date) {
-    let realdate = new Date(date);
-    return realdate.toLocaleDateString('de-DE');
-}
-/* ============================================================*/
 
 function startOfDay(date) { const d = new Date(date); d.setHours(0,0,0,0); return d; }
 function endOfDay(date)   { const d = new Date(date); d.setHours(23,59,59,999); return d; }
@@ -283,6 +201,33 @@ function buildColumns(count, width) {
     return cols;
 }
 
+function buildDocumentProperties(meta) {
+    const created = meta.created instanceof Date
+        ? meta.created.toISOString()
+        : new Date().toISOString();
+    const lastSaved = meta.lastSaved instanceof Date
+        ? meta.lastSaved.toISOString()
+        : new Date().toISOString();
+
+    return `
+    <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+        <Author>${escapeXml(meta.author || "Unbekannt")}</Author>
+        <LastAuthor>${escapeXml(meta.author || "Unbekannt")}</LastAuthor>
+        <Created>${created}</Created>
+        <LastSaved>${lastSaved}</LastSaved>
+        <Company>${escapeXml(meta.company || "Unbekannt")}</Company>
+        <Version>${escapeXml(meta.version || "1.0.0")}</Version>
+        <Description>${escapeXml(meta.description || "")}</Description>
+    </DocumentProperties>
+    <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+        <WindowHeight>9000</WindowHeight>
+        <WindowWidth>13860</WindowWidth>
+        <ProtectStructure>False</ProtectStructure>
+        <ProtectWindows>False</ProtectWindows>
+    </ExcelWorkbook>
+    `;
+}
+
 /* ===================== Worksheets erzeugen ===================== */
 
 function buildMainSheetXML(entries) {
@@ -438,6 +383,18 @@ function buildEmployeeSheetXML(employeeName, items) {
 
 function createSpreadsheetMLWorkbookXml(entries) {
     let xml = buildWorkbookHeader();
+
+    //Meta Daten
+    xml += buildDocumentProperties({
+        author: GITHUB_OWNER,
+        company: "",
+        version: CURRENTVERSION,
+        created: new Date(),
+        description: "Automatisch generierte Bereitschaftsplanung",
+        lastSaved: new Date()
+    });
+
+    // Stile
     xml += buildStyles();
 
     // Hauptblatt
@@ -482,7 +439,9 @@ async function exportPlanSpreadsheetML() {
 
     try {
         const xml = createSpreadsheetMLWorkbookXml(entries);
-        downloadFile(xml, 'Bereitschaftsplan.xml', 'application/vnd.ms-excel');
+        const teamname = document.getElementById("titleTeamName").textContent || 'TEAM';
+
+        downloadFile(xml, `Bereitschaftsplan_${teamname}_${yearsCovered(entries)}.xml`, 'application/vnd.ms-excel');
     } catch (err) {
         console.error(err);
         alert("Fehler beim Erstellen der Excel-Datei.");
