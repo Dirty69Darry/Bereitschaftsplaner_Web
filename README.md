@@ -14,6 +14,7 @@ Der Planer operiert vollständig lokal.
  
 ## Change-Log
   0.2.5 -> 0.2.6
+  
     - Globals.js in Web-Speicher Laden und damit arbeiten
     - Version Check mit Fallbacks
     - cleanup main.js
