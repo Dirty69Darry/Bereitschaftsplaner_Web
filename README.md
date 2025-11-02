@@ -11,6 +11,14 @@ Der Planer operiert vollständig lokal.
 
 - ab Version 0.2.2 .team Dateien nicht mehr kompatibel mit den Alten
   -  um das zu ändern muss man das Bundeslandkürzel in Großbuchstaben am Ende der .team Datei angefügen
+ 
+## Change-Log
+  0.2.5 -> 0.2.6
+    - Globals.js in Web-Speicher Laden und damit arbeiten
+    - Version Check mit Fallbacks
+    - cleanup main.js
+    - Excel Export Metadaten ergänzt
+    - Excel Export Name der Datei mit Teamnamen und Jahr erweitern
 
 ## Getting Started
 
