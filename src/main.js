@@ -2,8 +2,6 @@
 /*
     TODO:
     - die großen .addEventListener in function umwandeln
-    - letzte Bereitschaft im Edit anlegen un speichern
-        -> mit Logik versehen, sodass erste Periode nicht ein MA zugewiesen bekommt, der gerade Bereitschaft hatte
     - Excel Tabelle erweitern 
         - zweite Excel-Tabelle Monatsweise Zeile pro Mitarbeiter
     
@@ -13,6 +11,8 @@
     - cleanup main.js
     - Excel Export Metadaten ergänzt
     - Excel Export Name der Datei mit Teamnamen und Jahr erweitern
+    - letzte Bereitschaft im Edit anlegen un speichern
+        -> mit Logik versehen, sodass erste Periode nicht ein MA zugewiesen bekommt, der gerade Bereitschaft hatte
 */
 
 
@@ -28,13 +28,17 @@ const OPENEDITBTN  = document.getElementById('openEditModal');
 const CLOSEEDITBTN = document.getElementById('closeEditModal');
 const EDITOVERLAY  = document.getElementById('editOverlay');
 const EDITWINDOW  = document.getElementById('editWindow');
-const EDITFORM     = document.getElementById('EditForm');
+const EDITFORM     = document.getElementById('editForm');
+
+const deleteEmployeeDialog = document.getElementById('deleteEmployeeDialog');
+const confirmBtn = document.getElementById('confirmBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+
 
 /*--------------------Main-Event und Organisation----------------------------- */
 // Event-Listener Main
 window.addEventListener('DOMContentLoaded', () => {
     const stateSelect = document.getElementById("stateSelect");
-    console.log(`${CLOSEBTN}`);
     if (getTeamFromLocalStorage().teamKey != null) {
         globalEmployeesData = getTeamFromLocalStorage().teamKey; // Setzt den globalen Schlüssel für Mitarbeiterdaten
         document.getElementById("titleTeamName").textContent = globalEmployeesData.split('.team')[0]; // Setzt den Titel des Teamnamens
@@ -60,6 +64,7 @@ window.addEventListener('DOMContentLoaded', () => {
         stateSelect.value = localStorage.getItem("selectedState");
         stateSelect.disabled = true;
     }
+
 });
 
 function toggleActionButtons(){
@@ -341,6 +346,7 @@ function generatePlan(employees, startDate, endDate, periodLength = 7, employees
                         employeeId: employee.id,
                         firstName: employee.firstName,
                         lastName: employee.lastName,
+                        lastShiftDate: employee.lastShiftDate,
                         startShiftDate: new Date(periodStart),
                         endShiftDate: new Date(periodEnd)
                     });
@@ -360,7 +366,6 @@ function generatePlan(employees, startDate, endDate, periodLength = 7, employees
     localStorage.setItem('shiftPlan', JSON.stringify(assignments));
     return assignments;
 }
-
 
 function getNextAvailableEmployee(employees, periodStart, periodEnd)  {
     for (const emp of employees) {
@@ -406,6 +411,20 @@ console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
     if (lastYear) {
         return null; //Konflikt mit Feiertag
     }
+
+    // Letzte Bereitschaft prüfen
+    if (emp.lastShiftDate) {
+        const lastShiftDate = new Date(emp.lastShiftDate);
+        const periodDuration = periodEnd - periodStart; // Zeitspanne des Zeitraums in ms
+        const requiredGap = periodDuration * (emp?.length || 1);
+        const timeSinceLastShift = periodStart - lastShiftDate;
+
+        if (timeSinceLastShift > requiredGap) {
+            console.log(`⚠️ ${emp.name} wurde zu kürzlich eingesetzt.`);
+            return null; // zu früh wieder eingeplant
+        }
+    }
+
     return 1;
     
 }
@@ -543,7 +562,7 @@ function saveFile() {
 
 /**--------------------Mitarbeiter hinzufügen----------------------------------------------------*/
 //Modal-Elemente für neuen Mitarbeiter
-OPENBTN.addEventListener('click', () => {
+function openAddModal() {
 
     ADDOVERLAY.style.display = 'flex';
     ADDWINDOW.scrollTop = 0; // Scrollen nach oben
@@ -558,39 +577,42 @@ OPENBTN.addEventListener('click', () => {
     addVacationBtn.replaceWith(addVacationBtn.cloneNode(true));
     document.getElementById("addVacationBtn").addEventListener("click", (e) => addVacation(e, 'vacationBegin', 'vacationEnd', 'vacationTable')); 
 
-});
+}
 
 // Modal Neuer Mitarbeiter schließen
-CLOSEBTN.addEventListener('click', () => {
+function closeAddModal() {
     document.getElementById("vacationTable").querySelector("tbody").innerHTML = ""; // Urlaubstabelle leeren
     document.getElementById("holidaysTable").innerHTML = ""; // Feiertagstabelle leeren
     document.getElementById("holidaysTable").innerHTML = "<thead><tr><th>Feiertag</th><th>Jahr</th></tr></thead>";
     ADDOVERLAY.style.display = 'none';
     FORM.reset();
-});
+}
 
 // Modal Neuer Mitarbeiter schließen bei Klick außerhalb des Fensters
-ADDOVERLAY.addEventListener('click', e => {
+function closeAddModalOnClickOutside(e) {
 if (e.target === ADDOVERLAY) {
-    CLOSEBTN.click(); // Schließt das Modal
+    closeAddModal(); // Schließt das Modal
 }
-});
+}
 
 // Modal für Mitarbeiter speichern
-FORM.addEventListener('submit', e => {
+function saveNewEmployee(e) {
     e.preventDefault();
     const firstName = document.getElementById('forename').value.trim();
     const lastName  = document.getElementById('surname').value.trim();
+    const id = crypto.randomUUID();
+    const holidayData = {};
+    const rows = document.getElementById('holidaysTable').rows;
+    const lastShiftDate = document.getElementById('lastShiftDate').value;
 
     if (!firstName || !lastName) {
         alert("Bitte Vorname und Nachname eingeben.");
         return;
     }
 
-    const id = crypto.randomUUID();
-    const holidayData = {};
-
-    const rows = document.getElementById('holidaysTable').rows;
+    if (!lastShiftDate) {
+        lastShiftDate = null;
+    }
 
     for (let i = 1; i < rows.length; i++) {
         const holiday = rows[i].cells[0].innerText;
@@ -608,6 +630,7 @@ FORM.addEventListener('submit', e => {
         id,
         firstName,
         lastName,
+        lastShiftDate,
         vacations: [...vacations],
         lastOnHolidayYear: holidayData
     };
@@ -624,7 +647,7 @@ FORM.addEventListener('submit', e => {
     CLOSEBTN.click(); // Modal schließen
     vacations = []; // Urlaubsanträge zurücksetzen
     showEmployees(); // Tabelle aktualisieren
-});
+}
 
 /*--------------------Mitarbeiter bearbeiten----------------------------------------------------*/
 //Modal-Elemente für Mitarbeiter bearbeiten
@@ -642,6 +665,10 @@ function openEditModal(index) {
 
     document.getElementById('editForename').value = emp.firstName;
     document.getElementById('editSurname').value = emp.lastName;
+    document.getElementById('editlastShiftDate').value = emp.lastShiftDate || "";
+    document.getElementById('editlastShiftDate').addEventListener('change', () => {
+        console.log("Edit: "+document.getElementById('editlastShiftDate').value);
+    });
 
     // Vorher alte Listener entfernen
     const editVacationBtn = document.getElementById("editVacationBtn");
@@ -658,22 +685,46 @@ function openEditModal(index) {
 }
 
 // Edit Modal schließen
-CLOSEEDITBTN.addEventListener('click', () => {
+function closeEditModal() {
     document.getElementById("editHolidaysTable").innerHTML = ""; // Urlaubstabelle leeren
     document.getElementById("editHolidaysTable").innerHTML = "<thead><tr><th>Feiertag</th><th>Jahr</th></tr></thead>";
     EDITOVERLAY.style.display = 'none';
-    editForm.reset();
-});
+    EDITFORM.reset();
+}
 
 //Modal Edit Mitarbeiter schließen bei Klick außerhalb des Fensters
-EDITOVERLAY.addEventListener('click', e => {
+function closeEditModalOnClickOutside(e) {
 if (e.target === EDITOVERLAY) {
     CLOSEEDITBTN.click(); // Schließt das editModal
 }
-});
+}
+
+//öffnen des Lösch-Dialogs
+function openDeleteDialog() {
+    const employees = getEmployees(globalEmployeesData) || [];
+    if (currentEditIndex === null || currentEditIndex < 0 || currentEditIndex >= employees.length) {
+        alert("Kein Mitarbeiter ausgewählt zum Löschen.");
+        return;
+    }
+    const emp = employees[currentEditIndex];
+    document.getElementById('deleteMessage').innerHTML = `Möchten Sie <b>${emp.firstName} ${emp.lastName}</b> wirklich löschen?`;
+
+    if (!deleteEmployeeDialog.open) 
+        deleteEmployeeDialog.showModal(); // opens dialog
+}
+
+// Bestätigen des Löschens
+function confirmDeleteEmployee() {
+    deleteEmployee();
+    deleteEmployeeDialog.close(); // closes dialog
+}
+// Abbrechen des Löschens
+function cancelDeleteEmployee() {
+    deleteEmployeeDialog.close(); // closes dialog
+}
 
 // Löschen des Mitarbeiters
-deleteEditBtn.addEventListener('click', () => {
+function deleteEmployee() {
     const employees = getEmployees(globalEmployeesData) || [];
     if (currentEditIndex !== null && currentEditIndex >= 0 && currentEditIndex < employees.length) {
         employees.splice(currentEditIndex, 1); // Mitarbeiter löschen
@@ -681,18 +732,19 @@ deleteEditBtn.addEventListener('click', () => {
         console.log("Mitarbeiter gelöscht:", employees);
         alert('Mitarbeiter gelöscht!');       
         showEmployees(); // Tabelle aktualisieren
-        CLOSEEDITBTN.click(); // Modal schließen
+        closeEditModal(); // Modal schließen
         currentEditIndex = null; // Index zurücksetzen
     } else {
         alert("Kein Mitarbeiter ausgewählt zum Löschen.");
     }
-});
+}
 
 // Modal Edit Mitarbeiter speichern
-editForm.addEventListener('submit', e => {
+function saveEditedEmployee(e) {
     e.preventDefault();
     const firstName = document.getElementById('editForename').value.trim();
     const lastName  = document.getElementById('editSurname').value.trim();
+    const lastShiftDate = document.getElementById('editlastShiftDate').value || "";
 
     if (!firstName || !lastName) {
         alert("Bitte Vorname und Nachname eingeben.");
@@ -704,6 +756,7 @@ editForm.addEventListener('submit', e => {
 
     emp.firstName = firstName;
     emp.lastName  = lastName;
+    emp.lastShiftDate = lastShiftDate;
 
     // Urlaubsanträge aktualisieren
     emp.vacations = vacations;
@@ -738,8 +791,8 @@ editForm.addEventListener('submit', e => {
     currentEditIndex = null; // Index zurücksetzen
     EDITOVERLAY.style.display = 'none';
     showEmployees(); // Tabelle aktualisieren
-    editForm.reset();
-});
+    EDITFORM.reset();
+}
 
 /*----------------------Team speichern------------------------------------------------------------*/
 // Modal File save schließen

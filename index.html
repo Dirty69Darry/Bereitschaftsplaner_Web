@@ -46,14 +46,14 @@
 </nav>
 
 <div id = "action-buttonsID" class="action-buttons">
-    <button id="openModal">Neuen Mitarbeiter hinzufügen</button>
+    <button id="openModal" onclick="openAddModal()">Neuen Mitarbeiter hinzufügen</button>
     <button onclick="createShiftPlan()">Bereitschaftsplan erstellen</button>
     <button id="exportPlan">Bereitschaftsplan exportieren</button> <!-- Verwendung excelexport.js -->
 </div>
 
 <div class="employee-list">
     <h3>Mitarbeiterliste</h3>
-    <table id="employeeTable">
+    <table id="employeeTable" onclick="openEditModal(event)">
         <thead><tr><th>Vorname</th><th>Nachname</th></tr></thead>
         <tbody></tbody>
     </table>
@@ -69,9 +69,9 @@
 </div>
 
 <!--Add-Modal -->
-<div id="addOverlay">
+<div id="addOverlay" onclick="closeAddModalOnClickOutside(event)" class="modal">
 <div id="addWindow">
-    <button id="closeModal">&times;</button>
+    <button id="closeModal" onclick="closeAddModal()">&times;</button>
     <h2>Mitarbeiter hinzufügen</h2>
     <form id="employeeForm">
     <div>
@@ -81,6 +81,12 @@
     <div>
     <label for="surname">Nachname</label>
     <input type="text" id="surname" />
+    </div>
+
+    <div class="group"> 
+        <h2>letzter Tag der letzten Bereitschaft</h2>
+        <label for="lastShiftDate">Datum</label>
+        <input type="date" id="lastShiftDate" />
     </div>
 
     <div class="group">
@@ -121,15 +127,15 @@
     <small>Zum Bearbeiten Jahr anklicken.</small>
     </div>
 
-    <button type="submit" id="saveBtn">Speichern</button>
+    <button type="submit" id="saveBtn" onclick="saveNewEmployee(event)">Speichern</button>
     </form>
 </div>
 </div>
 
 <!-- Edit-Modal -->
-<div id="editOverlay">
+<div id="editOverlay" onclick="closeEditModalOnClickOutside(event)">
 <div id="editWindow">
-    <button id="closeEditModal">
+    <button id="closeEditModal" onclick="closeEditModal()">
     &times;
     </button>
     <h2>Mitarbeiter bearbeiten</h2>
@@ -143,14 +149,20 @@
     <input type="text" id="editSurname" />
     </div>
 
+    <div class="group"> 
+        <h2>letzter Tag der letzten Bereitschaft</h2>
+        <label for="editlastShiftDate">Datum</label>
+        <input type="date" id="editlastShiftDate" />
+    </div>
+
     <div class="group">
-    <h2>Urlaub bearbeiten</h2>
-    <label for="vacationBegin">Beginn</label>
-    <input type="date" id="editVacationBegin" />
-    <br />
-    <label for="vacationEnd">Ende</label>
-    <input type="date" id="editVacationEnd" />
-    <br />
+        <h2>Urlaub bearbeiten</h2>
+        <label for="vacationBegin">Beginn</label>
+        <input type="date" id="editVacationBegin" />
+        <br />
+        <label for="vacationEnd">Ende</label>
+        <input type="date" id="editVacationEnd" />
+        <br />
     <button id="editVacationBtn">Urlaub hinzufügen</button>
 
     <table id="editVacationTable">
@@ -181,8 +193,8 @@
     <small>Zum Bearbeiten Jahr anklicken.</small>
     </div>
 
-    <button type="submit" id="saveBtn">Speichern</button>
-    <button id="deleteEditBtn">Mitarbeiter Löschen</button>
+    <button type="submit" id="saveBtn" onclick="saveEditedEmployee(event)">Speichern</button>
+    <button id="deleteEditBtn" type="button" onclick="openDeleteDialog()">Mitarbeiter Löschen</button>
     </form>
 </div>
 </div>
@@ -250,6 +262,15 @@
         </form>
     </div>
 </div>
+
+<!--DeleteEmployeeDialog-->
+<dialog id="deleteEmployeeDialog">
+    <p id="deleteMessage">Möchten Sie diesen Mitarbeiter wirklich löschen?</p>
+    <menu>
+    <button id="confirmBtn" type="button" onclick="confirmDeleteEmployee()">Ja</button>
+    <button id="cancelBtn" type="button" onclick="cancelDeleteEmployee()">Nein</button>
+    </menu>
+</dialog>
 
 <script src="src/main.js"></script>
 <script src="src/excelexport.js"></script>

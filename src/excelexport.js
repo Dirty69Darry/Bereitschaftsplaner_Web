@@ -3,12 +3,7 @@
 function startOfDay(date) { const d = new Date(date); d.setHours(0,0,0,0); return d; }
 function endOfDay(date)   { const d = new Date(date); d.setHours(23,59,59,999); return d; }
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
-function toISODate(d) { 
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-}
+
 function weekdayMon0(d) { return (d.getDay() + 6) % 7; } // weil default Sonntag=0
 const WEEKEND_JS = new Set([5,6]); 
 
