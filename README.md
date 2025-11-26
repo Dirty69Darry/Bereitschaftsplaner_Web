@@ -13,15 +13,15 @@ Der Planer operiert vollständig lokal.
   -  um das zu ändern muss man das Bundeslandkürzel in Großbuchstaben am Ende der .team Datei angefügen
  
 ## Change-Log
-  0.2.5 -> 0.2.6
+  0.2.6 -> 0.2.7
   
-    - Globals.js in Web-Speicher Laden und damit arbeiten
-    - Version Check mit Fallbacks
-    - cleanup main.js
-    - Excel Export Metadaten ergänzt
-    - Excel Export Name der Datei mit Teamnamen und Jahr erweitern
-    - letzte Bereitschaft im Edit anlegen un speichern
-        -> mit Logik versehen, sodass erste Periode nicht ein MA zugewiesen bekommt, der gerade Bereitschaft hatte
+    - Bugfix: LastShiftdate als let definieren, weil verändert wird
+    - Bugfix: Feiertagsprüfung auf richtiges Datum umstellen bei Prüfung -> US Format zu D Format
+    - Bugfix: Fehler in Holiday Mapping Funktion
+    - Bugfix: Periodenlänge bei nicht vollständiger Periode anpassen
+    - Excel-Export: Spalte Feiertage hinzugefügt
+    - Excel-Export: Gesamtsumme der Einsatzwochen pro Mitarbeiter
+    - Alert, wenn kein Mitarbeiter verfügbar ist
 
 ## Getting Started
 
