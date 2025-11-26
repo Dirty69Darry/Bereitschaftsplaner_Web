@@ -8,7 +8,7 @@ window.vacations = []; // Array für Urlaubsanträge
 //global Konstanten
 window.GITHUB_OWNER = "dirty69darry";
 window.DATAURL = "https://github.com/Dirty69Darry/Bereitschaftsplaner_Web"; // URL zum Repository
-window.CURRENTVERSION = "0.2.6"; // Aktuelle Version der Anwendung
+window.CURRENTVERSION = "0.2.7"; // Aktuelle Version der Anwendung
 
 
 // Feiertage
@@ -161,10 +161,10 @@ window.getHolidays = function(year) {
         {index: 4, name: HOLIDAYS[4], date: format(addDays(easter, 0)) }, //Ostersonntag
         {index: 5, name: HOLIDAYS[5], date: format(addDays(easter, 1)) }, //Ostermontag
         {index: 6, name: HOLIDAYS[6], date: format(new Date(year, 4, 1)) }, //Tag der Arbeit
-        {index: 7, name: HOLIDAYS[7], date: format(addDays(easter, 40)) }, //Himmelfahrt
-        {index: 8, name: HOLIDAYS[8], date: format(addDays(easter, 50)) }, //Pfingstsonntag
-        {index: 9, name: HOLIDAYS[9], date: format(addDays(easter, 51)) }, //Pfingstmontag
-        {index: 10, name: HOLIDAYS[10], date: format(addDays(easter, 60)) }, //Frohnleichnam
+        {index: 7, name: HOLIDAYS[7], date: format(addDays(easter, 39)) }, //Himmelfahrt
+        {index: 8, name: HOLIDAYS[8], date: format(addDays(easter, 49)) }, //Pfingstsonntag
+        {index: 9, name: HOLIDAYS[9], date: format(addDays(easter, 50)) }, //Pfingstmontag
+        {index: 10, name: HOLIDAYS[10], date: format(addDays(easter, 59)) }, //Frohnleichnam
         {index: 11, name: HOLIDAYS[11], date: format(new Date(year, 7, 15)) }, //Maria Himmelfahrt
         {index: 12, name: HOLIDAYS[12], date: format(new Date(year, 8, 20)) }, //Kindertag
         {index: 13, name: HOLIDAYS[13], date: format(new Date(year, 9, 3)) }, //Tag der deutschen Einheit
