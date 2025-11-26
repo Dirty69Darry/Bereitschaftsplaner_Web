@@ -5,6 +5,12 @@ function endOfDay(date)   { const d = new Date(date); d.setHours(23,59,59,999); 
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
 
 function weekdayMon0(d) { return (d.getDay() + 6) % 7; } // weil default Sonntag=0
+function dateComparisonWithoutTime(hDate, start, end) {
+    const h = new Date(hDate.getFullYear(), hDate.getMonth(), hDate.getDate());
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    return h >= s && h <= e;
+}
 const WEEKEND_JS = new Set([5,6]); 
 
 /*====================== Gruppierung und Jahre ============================================*/
@@ -37,7 +43,7 @@ function makeMonthGrid(year, month0, markedDatesInput, holidayDatesInput) {
         const isWE = WEEKEND_JS.has(weekdayMon0(d));
         const isMarked = markedSet.has(iso);
         const isHoliday = holidaysSet.has(iso);
-        console.log('is Holiday: ', iso, isHoliday);
+        //console.log('is Holiday: ', iso, isHoliday);
 
         let style = 'normal';
         if (isHoliday && isMarked && isWE) style = 'holidayShiftWeekend';
@@ -164,6 +170,9 @@ function buildStyles() {
             <Alignment ss:Vertical="Center" ss:Horizontal="Left"/>
             <Font ss:FontName="Calibri" ss:Size="9"/>
             </Style>
+            <Style ss:ID="left">
+            <Alignment ss:Horizontal="Left" ss:Vertical="Center" />
+            </Style>
         </Styles>`;
 }
 
@@ -226,23 +235,40 @@ function buildDocumentProperties(meta) {
 /* ===================== Worksheets erzeugen ===================== */
 
 function buildMainSheetXML(entries) {
-    let tableXml = '<Table>' + buildColumns(2, 120) + buildColumns(1, 200);
+
+
+    let tableXml = '<Table>' + buildColumns(2, 120) + buildColumns(1,150) + buildColumns(1, 200);
 
     // Header
     tableXml += `
     <Row>
         <Cell ss:StyleID="header"><Data ss:Type="String">Start</Data></Cell>
         <Cell ss:StyleID="header"><Data ss:Type="String">Ende</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Feiertage</Data></Cell>
         <Cell ss:StyleID="header"><Data ss:Type="String">Name</Data></Cell>
     </Row>`;
 
     // Daten
     for (const e of entries) {
         const name = `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim();
+        const startDate = new Date(e.startShiftDate);
+        const endDate   = new Date(e.endShiftDate);
+        const year = new Date(e.startShiftDate).getFullYear();
+        const holidays= getHolidays(year);
+        const holidayNames = holidays
+            .filter(h => {
+                const [d, m, y] = h.date.split(".");
+                const hDate = new Date(+y, m - 1, +d);
+                return dateComparisonWithoutTime(hDate, startDate, endDate);
+            })
+            .map(h => h.name)
+            .join(", ");
+
         tableXml += `<Row>
         <Cell><Data ss:Type="String">${escapeXml(formatDateGerman(e.startShiftDate))}</Data></Cell>
         <Cell><Data ss:Type="String">${escapeXml(formatDateGerman(e.endShiftDate))}</Data></Cell>
-        <Cell><Data ss:Type="String">${escapeXml(name)}</Data></Cell>
+        <Cell><Data ss:Type="String">${escapeXml(holidayNames)}</Data></Cell>
+        <Cell ss:StyleID="left"><Data ss:Type="String">${escapeXml(name)}</Data></Cell>
         </Row>`;
     }
 
@@ -257,7 +283,9 @@ function buildMainSheetXML(entries) {
 
 function buildEmployeeSheetXML(employeeName, items) {
     const safeName = sanitizeSheetName(employeeName);
-
+    const startPeriod = startOfDay(new Date(items[0].startShiftDate));
+    const endPeriod = endOfDay(new Date(items[0].endShiftDate));
+    const shiftDays = Math.floor((endPeriod - startPeriod) / (1000 * 60 * 60 * 24)) + 1;
     // Einsatztage sammeln
     const years = yearsCovered(items);
     const markedByYear = new Map();
@@ -265,13 +293,14 @@ function buildEmployeeSheetXML(employeeName, items) {
     for (const it of items) {
         const s = startOfDay(new Date(it.startShiftDate));
         const t = endOfDay(new Date(it.endShiftDate));
+
         for (const d of daysInclusive(s, t)) {
         const iso = toISODate(d);
         const y = d.getFullYear();
         if (markedByYear.has(y)) markedByYear.get(y).add(iso);
         }
     }
-
+console.log(`Shifttage: ${shiftDays}`);
     const blockW = 8;               
     const daysCols = 7;
     const gridCols = 3;
@@ -362,9 +391,10 @@ function buildEmployeeSheetXML(employeeName, items) {
         const sumYear = (markedSet.size || 0);
         grandTotal += sumYear;
     }
+    const periodTotal = grandTotal / shiftDays;
 
     // Gesamtsumme
-    tableXml += `<Row><Cell ss:MergeAcross="${1*blockW}" ss:StyleID="header"><Data ss:Type="String">Gesamtsumme Einsatztage: ${grandTotal}</Data></Cell></Row></Table>`;
+    tableXml += `<Row><Cell ss:MergeAcross="${1*blockW}" ss:StyleID="header"><Data ss:Type="String">Gesamtsumme Einsatzwochen: ${periodTotal}</Data></Cell></Row></Table>`;
 
     // Worksheet zusammensetzen
     return `

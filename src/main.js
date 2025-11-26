@@ -6,13 +6,14 @@
         - zweite Excel-Tabelle Monatsweise Zeile pro Mitarbeiter
     
     DONE:
-    - Globals.js in Web-Speicher Laden und damit arbeiten
-    - Version Check mit Fallbacks
-    - cleanup main.js
-    - Excel Export Metadaten ergänzt
-    - Excel Export Name der Datei mit Teamnamen und Jahr erweitern
-    - letzte Bereitschaft im Edit anlegen un speichern
-        -> mit Logik versehen, sodass erste Periode nicht ein MA zugewiesen bekommt, der gerade Bereitschaft hatte
+    - Bugfix: LastShiftdate als let definieren, weil verändert wird
+    - Bugfix: Feiertagsprüfung auf richtiges Datum umstellen bei Prüfung -> US Format zu D Format
+    - Bugfix: Fehler in Holiday Mapping Funktion
+    - Bugfix: Periodenlänge bei nicht vollständiger Periode anpassen
+    - Excel-Export: Spalte Feiertage hinzugefügt
+    - Excel-Export: Gesamtsumme der Einsatzwochen pro Mitarbeiter
+    - Alert, wenn kein Mitarbeiter verfügbar ist
+
 */
 
 
@@ -301,10 +302,10 @@ function openPlanModal(employees) {
             const startDate = new Date(startDateStr);
             let endDate = new Date(endDateStr);
 
-            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            const fullPeriods = Math.ceil(totalDays / periodLength);
+            const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const fullPeriods = Math.ceil(totalDays / (periodLength-1));
             const adjustedEndDate = new Date(startDate);
-            adjustedEndDate.setDate(startDate.getDate() + fullPeriods * periodLength - 1);
+            adjustedEndDate.setDate(adjustedEndDate.getDate() + (fullPeriods * (periodLength-1)));
 
             if (adjustedEndDate.getTime() !== endDate.getTime()) {
                 alert(`Das Enddatum wurde auf den ${adjustedEndDate.toLocaleDateString()} angepasst, um volle Perioden zu gewährleisten.`);
@@ -342,6 +343,7 @@ function generatePlan(employees, startDate, endDate, periodLength = 7, employees
                 const employee = ordered[j];
                 if (assignedThisPeriod.includes(employee.id)) continue;
                 if (getAvailableEmployee(employee, periodStart, periodEnd) !== null) {
+                    console.log(`Zuweisung: ${employee.firstName} ${employee.lastName} fuer ${periodStart.toLocaleDateString()} bis ${periodEnd.toLocaleDateString()}`);
                     assignments.push({
                         employeeId: employee.id,
                         firstName: employee.firstName,
@@ -357,10 +359,11 @@ function generatePlan(employees, startDate, endDate, periodLength = 7, employees
                 }
             }
             if (!found) {
+                alert(`Ab dem ${periodStart.toLocaleDateString()} steht kein freier Mitarbeiter zur Verfügung.`);
                 throw new Error(`Ab dem ${periodStart.toLocaleDateString()} steht kein freier Mitarbeiter zur Verfügung.`);
             }
         }
-        periodStart.setDate(periodStart.getDate() + periodLength);
+        periodStart.setDate(periodStart.getDate() + (periodLength - 1));
     }
 
     localStorage.setItem('shiftPlan', JSON.stringify(assignments));
@@ -378,14 +381,17 @@ function getNextAvailableEmployee(employees, periodStart, periodEnd)  {
     return null;
 }
 
+function parseGermanDate(str) {
+    const [d, m, y] = str.split(".");
+    return new Date(+y, m - 1, +d);
+}
+
 function getAvailableEmployee(emp, periodStart, periodEnd) {
     //sicherstellen, dass Datumsformat verwendet wird
     if (!(periodStart instanceof Date)) periodStart = new Date(periodStart);
     if (!(periodEnd instanceof Date)) periodEnd = new Date(periodEnd);
     const startYear = new Date(periodStart).getFullYear();
     const endYear = new Date(periodEnd).getFullYear();
-
-console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
 
     // Urlaub prüfen
     const onVacation = emp.vacations.some(v => {
@@ -399,7 +405,7 @@ console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
     // Feiertagsprüfung
     const holidaysThisYear = getHolidays(startYear);
     const lastYear = holidaysThisYear.some(h => {
-        const hDate = new Date(h.date);
+        const hDate = parseGermanDate(h.date);
         if (hDate >= periodStart && hDate <= periodEnd) {
         return Object.entries(emp.lastOnHolidayYear || {}).some(([, year]) => {
             const lastYearHoliday = getHolidays(year).find(h2 => isSameDayMonth(new Date(h2.date), hDate));
@@ -419,8 +425,8 @@ console.log("startperiod:", periodStart,"// endPeriod: ", periodEnd);
         const requiredGap = periodDuration * (emp?.length || 1);
         const timeSinceLastShift = periodStart - lastShiftDate;
 
-        if (timeSinceLastShift > requiredGap) {
-            console.log(`⚠️ ${emp.name} wurde zu kürzlich eingesetzt.`);
+        if (timeSinceLastShift < requiredGap) {
+            console.log(`${emp.name} wurde zu kürzlich eingesetzt.`);
             return null; // zu früh wieder eingeplant
         }
     }
@@ -603,7 +609,7 @@ function saveNewEmployee(e) {
     const id = crypto.randomUUID();
     const holidayData = {};
     const rows = document.getElementById('holidaysTable').rows;
-    const lastShiftDate = document.getElementById('lastShiftDate').value;
+    let lastShiftDate = document.getElementById('lastShiftDate').value;
 
     if (!firstName || !lastName) {
         alert("Bitte Vorname und Nachname eingeben.");
